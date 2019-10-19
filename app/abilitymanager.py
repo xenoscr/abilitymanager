@@ -24,19 +24,26 @@ class abilitymanager:
 		self.log.debug('Ability Manager Plugin logging started.')
 		self.get_conf()
 		self.fs = FileSystemSource(self.ctipath)
+		self.stockPath = os.path.join(os.path.dirname(os.path.realpath(__file__)), '../../stockpile//data/abilities/')
 
 	def get_conf(self):
 		confPath = os.path.join(os.path.dirname(os.path.realpath(__file__)), '../conf/amconf.yml')
+		self.log.debug('Getting local configuration from: {}'.format(confPath))
 		try:
 			with open(confPath, 'r') as c:
-				conf = yaml.load(c, Loader=yaml.Loaer)
-			self.ctipath = os.path.expander(os.path.join(conf['ctipath'], 'enterprise-attack/'))
+				conf = yaml.load(c, Loader=yaml.Loader)
+			self.log.debug(conf)
+			self.ctipath = os.path.expanduser(os.path.join(conf['ctipath'], 'enterprise-attack/'))
 			self.log.debug(self.ctipath)
-		except:
+		except Exception as e:
+			self.log.debug('Stopped at api call.')
+			self.log.error(e)
 			pass
 
-	def explode_stockpile(self):
+	async def explode_stockpile(self):
+		self.log.debug('Starting stockpile ability explosion')
 		stockAbilities = []
+		self.log.debug('Checking stockpile path: {}'.format(self.stockPath))
 		if os.path.exists(self.stockPath):
 			self.log.debug(self.stockPath)
 			for root, dirs, files in os.walk(self.stockPath):
@@ -55,17 +62,27 @@ class abilitymanager:
 						rawPlatform = rawAbility['platforms']
 						for keyName in rawPlatform.keys():
 							for test in rawPlatform[keyName]:
-								newTest = {'executor': ''}
+								newTest = {'platform': keyName, 'executor': ''}
+								parserName = ''
+								parserProperty = ''
+								parserScript = ''
 								if 'command' in rawPlatform[keyName][test].keys():
 									newTest.update({ 'command': b64encode(rawPlatform[keyName][test]['command'].encode('utf8')).decode('utf-8') }) 
 								if 'cleanup' in rawPlatform[keyName][test].keys():
 									newTest.update({ 'cleanup': b64encode(rawPlatform[keyName][test]['cleanup'].encode('utf-8')).decode('utf-8') })
 								if 'parser' in rawPlatform[keyName][test].keys():
-									newTest.update({ 'parser': rawPlatform[keyName][test]['parser'] })
+									if rawPlatform[keyName][test]['parser']['name']:
+										parserName = rawPlatform[keyName][test]['parser']['name']
+									if rawPlatform[keyName][test]['parser']['property']:
+										parserProperty = rawPlatform[keyName][test]['parser']['property']
+									if rawPlatform[keyName][test]['parser']['script']:
+										parserScript = rawPlatform[keyName][test]['parser']['script']
+									newTest.update({ 'parser': { 'name': parserName, 'property': parserProperty, 'script': b64encode(parserScript.encode('utf-8')).decode('utf-8') } })
 								if (len(test.split(',')) > 1):
 									for subTest in test.split(','):
 										newTest['executor'] = subTest
-										platformData.append(newTest)
+										platformData.append(newTest.copy())
+										self.log.debug(platformData)
 								else:
 									newTest['executor'] = test
 									platformData.append(newTest)
@@ -74,13 +91,19 @@ class abilitymanager:
 							'technique': rawAbility['technique'], 'platforms': platformData }
 
 						stockAbilities.append(newAbility)
-		return { 'abilities': stockAbilities }
+		return stockAbilities
 
 	@template('abilitymanager.html')
 	async def landing(self, request):
-		await self.auth_svc.check_permission(request)
-		abilities = await self.explode_stockpile()
-		tactics = set([a['tactic'].lower() for a in abilities])
+		self.log.debug('Starting landing call.')
+		try:
+			await self.auth_svc.check_permissions(request)
+			abilities = await self.explode_stockpile()
+			tactics = set([a['tactic'].lower() for a in abilities])
+			self.log.debug('Landing call completed.')
+		except Exception as e:
+			self.log.debug('Fialed to land.')
+			self.log.error(e)
 		return { 'abilities': json.dumps(abilities), 'tactics': tactics }
 
 	async def rest_api(self, request):
@@ -94,7 +117,7 @@ class abilitymanager:
 			PUT=dict(
 			),
 			POST=dict(
-				ac_ability=lambda d: self.explode_stockpile(**d),
+				am_ability=lambda d: self.explode_stockpile(**d),
 			),
 			DELETE=dict(
 			)
