@@ -95,66 +95,6 @@ function populateTacticAbilities(){
 }
 
 function appendAbilityToList(tactic, value) {
-	/*let cmd_command, cmd_cleanup, cmd_parser_name, cmd_parser_property, cmd_parser_script = null;
-	let psh_command, psh_cleanup, psh_parser_name, psh_parser_property, psh_parser_script = null;
-	let pwsh_command, pwsh_cleanup, pwsh_parser_name, pwsh_parser_property, pwsh_parser_script = null;
-	let linux_command, linux_cleanup, linux_parser_name, linux_parser_property, linux_parser_script = null;
-	let darwin_command, darwin_cleanup, darwin_parser_name, darwin_parser_property, darwin_parser_script = null;
-
-	value.platforms.forEach(function(platform) {
-		if (platform['executor'] == 'cmd')
-		{
-			cmd_platfrom = platform['platform'];
-			cmd_command = atob(platform['command']);
-			if (platform['cleanup'])
-				cmd_cleanup = atob(platform['cleanup']);
-			if (platform['parser'])
-			{
-				cmd_parser_name = platform['parser']['name'];
-				cmd_parser_property = platform['parser']['property'];
-				cmd_parser_script = atob(platform['parser']['script']);
-			}
-		}
-		if (platform['executor'] == 'psh')
-		{
-			psh_platform = platform['platform'];
-			psh_command = atob(platform['command']);
-			if (platform['cleanup'])
-				psh_cleanup = atob(platform['cleanup']);
-			if (platform['parser'])
-			{
-				psh_parser_name = platform['parser']['name'];
-				psh_parser_property = platform['parser']['property'];
-				psh_parser_script = atob(platform['parser']['script']);
-			}
-		}
-		if (platform['executor'] == 'pwsh')
-		{
-			pwsh_platform = platform['platform'];
-			pwsh_command = atob(platform['command']);
-			if (platform['cleanup'])
-				pwsh_cleanup = atob(platform['cleanup']);
-			if (platform['parser'])
-			{
-				pwsh_parser_name = platform['parser']['name'];
-				pwsh_parser_property = platform['parser']['property'];
-				pwsh_parser_script = atob(platform['parser']['script']);
-			}
-		}
-		if (platform['executor'] == 'sh')
-		{
-			sh_platform = platform['platform'];
-			sh_command = atob(platform['command']);
-			if (platform['cleanup'])
-				sh_cleanup = atob(platform['cleanup']);
-			if (platform['parser'])
-			{
-				sh_parser_name = platform['parser']['name'];
-				sh_parser_property = platform['parser']['property'];
-				sh_parser_script = atob(platform['parser']['script']);
-			}
-		}
-	});*/
     $('#ability-profile').find('#ability-test').append($("<option></option>")
         .attr("name",value['name'])
         .attr("ability_id",value['id'])
@@ -164,36 +104,6 @@ function appendAbilityToList(tactic, value) {
         .data("description", value['description'])
 		.data("tests", value['platforms'])
         .text(value['name']));
-		/*
-		.data("cmd_platform", cmd_platform)
-        .data("cmd_command", cmd_command)
-        .data("cmd_cleanup", cmd_cleanup)
-        .data("cmd_parser_name", cmd_parser_name)
-        .data("cmd_parser_property", cmd_parser_property)
-        .data("cmd_parser_script", cmd_parser_script)
-		.data("psh_platform", psh_platform)
-        .data("psh_command", psh_command)
-        .data("psh_cleanup", psh_cleanup)
-        .data("psh_parser_name", psh_parser_name)
-        .data("psh_parser_property", psh_parser_property)
-        .data("psh_parser_script", psh_parser_script)
-		.data("pwsh_platform", pwsh_
-        .data("pwsh_command", pwsh_command)
-        .data("pwsh_cleanup", pwsh_cleanup)
-        .data("pwsh_parser_name", pwsh_parser_name)
-        .data("pwsh_parser_property", pwsh_parser_property)
-        .data("pwsh_parser_script", pwsh_parser_script)
-        .data("linux_command", linux_command)
-        .data("linux_cleanup", linux_cleanup)
-        .data("linux_parser_name", linux_parser_name)
-        .data("linux_parser_property", linux_parser_property)
-        .data("linux_parser_script", linux_parser_script)
-        .data("darwin_command", darwin_command)
-        .data("darwin_cleanup", darwin_cleanup)
-        .data("darwin_parser_name", darwin_parser_name)
-        .data("darwin_parser_property", darwin_parser_property)
-        .data("darwin_parser_script", darwin_parser_script)
-		*/
 }
 
 function clearAbilityDossier(){
@@ -227,16 +137,24 @@ function addTest(testNum, test){
 			parserScript = '';
 		}
 		$('table.ability-tests-table tbody tr:last').after('<tr />').attr('class', 'test-heading-' + testNum).append($('<td />').attr('class', 'test-title-' + testNum).append($('<H3 />').text('Test ' + testNum + ':'))).append($('<td />').attr('class', 'test-delete-' + testNum).append($('<button />', {id: 'delete-test-' + testNum, type: 'button', class: 'ability-delete-button', onclick: 'deleteTest('+ testNum + ');'}).html('Delete Test')));
+		$('table.ability-tests-table tbody tr:last').after('<tr />').attr('class', 'test-sub-header-row').append($('<td />').attr('class', 'test-sub-header')).append($('<td />').attr('style', 'text-align:left').attr('class', 'test-sub-header').append($('<h4>').text('Command Details:')));
 		$('table.ability-tests-table tbody tr:last').after('<tr />').attr('class', 'test-row1-' + testNum).append($('<td />').attr('class', 'test-platform-name-' + testNum).append($('<p />').text('Platform:'))).append($('<td />').attr('class', 'test-platform-value-' + testNum).append($('<select />').append($('<option />', {value: 'windows', text: 'windows'})).append($('<option />', {value: 'linux', text: 'linux'})).append($('<option />', {value: 'darwin', text: 'darwin'})).val(test.platform).change()));
 		$('table.ability-tests-table tbody tr:last').after('<tr />').attr('class', 'test-row2-' + testNum).append($('<td />').attr('class', 'test-executor-name-' + testNum).append($('<p />').text('Executor:'))).append($('<td />').attr('class', 'test-executor-value-' + testNum).append($('<select />').append($('<option />', {value: 'cmd', text: 'cmd'})).append($('<option />', {value: 'psh', text: 'psh'})).append($('<option />', {value: 'pwsh', text: 'pwsh'})).append($('<option />', {value: 'sh', text: 'sh'})).val(test.executor).change()));
 		$('table.ability-tests-table tbody tr:last').after('<tr />').attr('class', 'test-row3-' + testNum).append($('<td />').attr('class', 'test-command-name-' + testNum).append($('<p />').text('Command:'))).append($('<td />').attr('class', 'test-command-value-' + testNum).append($('<textarea></textarea>').text(atob(test.command))));
+		$('table.ability-tests-table tbody tr:last').after('<tr />').attr('class', 'test-sub-header-row').append($('<td />').attr('class', 'test-sub-header')).append($('<td />').attr('style', 'text-align:left').attr('class', 'test-sub-header').append($('<h4>').text('Test Clean-Up:')));
 		if (test.cleanup)
 			$('table.ability-tests-table tbody tr:last').after('<tr />').attr('class', 'test-row4-' + testNum).append($('<td />').attr('class', 'test-cleanup-name-' + testNum).append($('<p />').text('Clean-Up:'))).append($('<td />').attr('class', 'test-cleanup-value-' + testNum).append($('<textarea></textarea>').text(atob(test.cleanup))));
 		else
 			$('table.ability-tests-table tbody tr:last').after('<tr />').attr('class', 'test-row4-' + testNum).append($('<td />').attr('class', 'test-cleanup-name-' + testNum).append($('<p />').text('Clean-Up:'))).append($('<td />').attr('class', 'test-cleanup-value-' + testNum).append($('<textarea></textarea>').text('')));
-		$('table.ability-tests-table tbody tr:last').after('<tr />').attr('class', 'test-row5-' + testNum).append($('<td />').attr('class', 'test-parser-name-name-' + testNum).append($('<p />').text('Parser Name:'))).append($('<td />').attr('class', 'test-parser-name-value-' + testNum).append($('<select />').append($('<option />', {value: 'line', text: 'line'})).append($('<option />', {value: 'host', text: 'host'})).append($('<option />', {value: 'json', text: 'json'})).append($('<option />', {value: 'regex', text: 'regex'})).val(parserName).change()));
-		$('table.ability-tests-table tbody tr:last').after('<tr />').attr('class', 'test-row6-' + testNum).append($('<td />').attr('class', 'test-parser-property-name-' + testNum).append($('<p />').text('Parser Property:'))).append($('<td />').attr('class', 'test-parser-property-value-' + testNum).append($('<input>').val(parserProperty)));
-		$('table.ability-tests-table tbody tr:last').after('<tr />').attr('class', 'test-row7-' + testNum).append($('<td />').attr('class', 'test-parser-script-name-' + testNum).append($('<p />').text('Parser script:'))).append($('<td />').attr('class', 'test-parser-script-value-' + testNum).append($('<input>').val(parserScript)));
+		$('table.ability-tests-table tbody tr:last').after('<tr />').attr('class', 'test-sub-header-row').append($('<td />').attr('class', 'test-sub-header')).append($('<td />').attr('style', 'text-align:left').attr('class', 'test-sub-header').append($('<h4>').text('Payload:')));
+		if (test.payload)
+			$('table.ability-tests-table tbody tr:last').after('<tr />').attr('class', 'test-row5-' + testNum).append($('<td />').attr('class', 'test-payload-name-' + testNum).append($('<p />').text('Payload:'))).append($('<td />').attr('class', 'test-payload-value-' + testNum).append($('<input />').val(test.payload)));
+		else
+			$('table.ability-tests-table tbody tr:last').after('<tr />').attr('class', 'test-row5-' + testNum).append($('<td />').attr('class', 'test-payload-name-' + testNum).append($('<p />').text('Payload:'))).append($('<td />').attr('class', 'test-payload-value-' + testNum).append($('<input />').val('')));
+		$('table.ability-tests-table tbody tr:last').after('<tr />').attr('class', 'test-sub-header-row').append($('<td />').attr('class', 'test-sub-header')).append($('<td />').attr('style', 'text-align:left').attr('class', 'test-sub-header').append($('<h4>').text('Parser:')));
+		$('table.ability-tests-table tbody tr:last').after('<tr />').attr('class', 'test-row6-' + testNum).append($('<td />').attr('class', 'test-parser-name-name-' + testNum).append($('<p />').text('Parser Name:'))).append($('<td />').attr('class', 'test-parser-name-value-' + testNum).append($('<select />').append($('<option />', {value: 'line', text: 'line'})).append($('<option />', {value: 'host', text: 'host'})).append($('<option />', {value: 'json', text: 'json'})).append($('<option />', {value: 'regex', text: 'regex'})).val(parserName).change()));
+		$('table.ability-tests-table tbody tr:last').after('<tr />').attr('class', 'test-row7-' + testNum).append($('<td />').attr('class', 'test-parser-property-name-' + testNum).append($('<p />').text('Parser Property:'))).append($('<td />').attr('class', 'test-parser-property-value-' + testNum).append($('<input>').val(parserProperty)));
+		$('table.ability-tests-table tbody tr:last').after('<tr />').attr('class', 'test-row8-' + testNum).append($('<td />').attr('class', 'test-parser-script-name-' + testNum).append($('<p />').text('Parser script:'))).append($('<td />').attr('class', 'test-parser-script-value-' + testNum).append($('<input>').val(parserScript)));
 	
 }
 
@@ -254,6 +172,8 @@ function getAllTests(){
 		curTest['command'] = btoa($('td.test-command-value-'+i+' textarea').text());
 		if ($('td.test-cleanup-value-'+i+' textarea').text() != '')
 			curTest['cleanup'] = btoa($('td.test-cleanup-value-'+i+' textarea').text());
+		if ($('td.test-payload-value-'+i+' input').val())
+			curTest['payload'] = $('td.test-payload-value-'+i+' input').val();
 		if ($('td.test-parser-name-value-'+i+' select option:selected').text() != '')
 		{
 			curParser['name'] = $('td.test-parser-name-value-'+i+' select option:selected').text();
@@ -266,11 +186,35 @@ function getAllTests(){
 	return allTests;
 }
 
+function checkDupTestCombo(){ 
+	let testCount = $('[class^=test-heading-]').length;
+
+	let testCombos = {};
+
+	for (i = 0; i < testCount; i++)
+	{
+		curTest = {};
+		curTest[$('td.test-platform-value-'+i+' select option:selected').text()] = $('td.test-executor-value-'+i+' select option:selected').text();
+
+		for (let [key, value] of Object.entries(testCombos))
+		{
+			curTestEntry = Object.entries(curTest)[0];
+			if ((key == curTestEntry[0]) && (value == curTestEntry[1]))
+			{
+				return false;
+			}
+		}
+		Object.assign(testCombos, curTest);
+	}
+	return true;
+}
+
 function deleteTest(testNum){
 	allTests = getAllTests();
 	clearTests();
 	testCounter = 0;
 	
+	$('table.ability-tests-table tbody tr:last').after('<tr />').attr('class', 'test-platform-heading').append($('<td />').attr('class', 'test-platform-title').append($('<H2 />').text('Platforms:'))).append('<td />').attr('class', 'test-platform-title');
 	for (i = 0; i < allTests.length; i++){
 		if (i != testNum)
 		{
@@ -293,65 +237,12 @@ function loadAbility() {
     $(parent).find('#ability-technique-name').val($(chosen).data('attack_name'));
     $(parent).find('#ability-description').val($(chosen).data('description'));
 
+	$('table.ability-tests-table tbody tr:last').after('<tr />').attr('class', 'test-platform-heading').append($('<td />').attr('class', 'test-platform-title').append($('<H2 />').text('Platforms:'))).append('<td />').attr('class', 'test-platform-title');
 	$(chosen).data('tests').forEach(function(test) {
 		addTest(testCounter, test);	
 		testCounter++;
 	});
 
-	// find the test numbers using: $('[class^=test-heading]').each(function() { console.log(this.className[this.className.length -1]) });
-
-/*	
-	if ($(chosen).data('cmd_command'))
-		$(parent).find('#ability-cmd-command').val($(chosen).data('cmd_command'));
-	if ($(chosen).data('cmd_cleanup'))
-		$(parent).find('#ability-cmd-cleanup').val($(chosen).data('cmd_cleanup'));
-	if ($(chosen).data('cmd_parser_name'))
-		$(parent).find('#ability-cmd-parser-name').val($(chosen).data('cmd_parser_name'));
-	if ($(chosen).data('cmd_parser_property'))
-		$(parent).find('#ability-cmd-parser-property').val($(chosen).data('cmd_parser_property'));
-	if ($(chosen).data('cmd_parser_script'))
-		$(parent).find('#ability-cmd-parser-script').val($(chosen).data('cmd_parser_script'));
-	if ($(chosen).data('psh_command'))
-		$(parent).find('#ability-psh-command').html($(chosen).data('psh_command'));
-	if ($(chosen).data('psh_cleanup'))
-		$(parent).find('#ability-psh-cleanup').html($(chosen).data('psh_cleanup'));
-	if ($(chosen).data('psh_parser_name'))
-		$(parent).find('#ability-psh-parser-name').val($(chosen).data('psh_parser_name'));
-	if ($(chosen).data('psh_parser_property'))
-		$(parent).find('#ability-psh-parser-property').val($(chosen).data('psh_parser_property'));
-	if ($(chosen).data('psh_parser_script'))
-		$(parent).find('#ability-psh-parser-script').val($(chosen).data('psh_parser_script'));
-	if ($(chosen).data('pwsh_command'))
-		$(parent).find('#ability-pwsh-command').html($(chosen).data('pwsh_command'));
-	if ($(chosen).data('pwsh_cleanup'))
-		$(parent).find('#ability-pwsh-cleanup').html($(chosen).data('pwsh_cleanup'));
-	if ($(chosen).data('pwsh_parser_name'))
-		$(parent).find('#ability-pwsh-parser-name').val($(chosen).data('pwsh_parser_name'));
-	if ($(chosen).data('pwsh_parser_property'))
-		$(parent).find('#ability-pwsh-parser-property').val($(chosen).data('pwsh_parser_property'));
-	if ($(chosen).data('pwsh_parser_script'))
-		$(parent).find('#ability-pwsh-parser-script').val($(chosen).data('pwsh_parser_script'));
-	if ($(chosen).data('linux_command'))
-		$(parent).find('#ability-linux-command').html($(chosen).data('linux_command'));
-	if ($(chosen).data('linux_cleanup'))
-		$(parent).find('#ability-linux-cleanup').html($(chosen).data('linux_cleanup'));
-	if ($(chosen).data('linux_parser_name'))
-		$(parent).find('#ability-linux-parser-name').val($(chosen).data('linux_parser_name'));
-	if ($(chosen).data('linux_parser_property'))
-		$(parent).find('#ability-linux-parser-property').val($(chosen).data('linux_parser_property'));
-	if ($(chosen).data('linux_parser_script'))
-		$(parent).find('#ability-linux-parser-script').val($(chosen).data('linux_parser_script'));
-	if ($(chosen).data('darwin_command'))
-		$(parent).find('#ability-darwin-command').html($(chosen).data('darwin_command'));
-	if ($(chosen).data('darwin_cleanup'))
-		$(parent).find('#ability-darwin-cleanup').html($(chosen).data('darwin_cleanup'));
-	if ($(chosen).data('darwin_parser_name'))
-		$(parent).find('#ability-darwin-parser-name').val($(chosen).data('darwin_parser_name'));
-	if ($(chosen).data('darwin_parser_property'))
-		$(parent).find('#ability-darwin-parser-property').val($(chosen).data('darwin_parser_property'));
-	if ($(chosen).data('darwin_parser_script'))
-		$(parent).find('#ability-darwin-parser-script').val($(chosen).data('darwin_parser_script'));
-	*/
 }
 
 function clearAbility() {
@@ -364,51 +255,30 @@ function clearAbility() {
     $(parent).find('#ability-technique-id').val('');
     $(parent).find('#ability-technique-name').val('');
     $(parent).find('#ability-description').val('');
-
-	/*
-    $(parent).find('#ability-cmd-command').val('');
-    $(parent).find('#ability-cmd-cleanup').val('');
-    $(parent).find('#ability-cmd-parser-name').val('');
-    $(parent).find('#ability-cmd-parser-property').val('');
-    $(parent).find('#ability-cmd-parser-script').val('');
-    $(parent).find('#ability-psh-command').html('');
-    $(parent).find('#ability-psh-cleanup').html('');
-    $(parent).find('#ability-psh-parser-name').val('');
-    $(parent).find('#ability-psh-parser-property').val('');
-    $(parent).find('#ability-psh-parser-script').val('');
-    $(parent).find('#ability-pwsh-command').html('');
-    $(parent).find('#ability-pwsh-cleanup').html('');
-    $(parent).find('#ability-pwsh-parser-name').val('');
-    $(parent).find('#ability-pwsh-parser-property').val('');
-    $(parent).find('#ability-pwsh-parser-script').val('');
-    $(parent).find('#ability-linux-command').html('');
-    $(parent).find('#ability-linux-cleanup').html('');
-    $(parent).find('#ability-linux-parser-name').val('');
-    $(parent).find('#ability-linux-parser-property').val('');
-    $(parent).find('#ability-linux-parser-script').val('');
-    $(parent).find('#ability-darwin-command').html('');
-    $(parent).find('#ability-darwin-cleanup').html('');
-    $(parent).find('#ability-darwin-parser-name').val('');
-    $(parent).find('#ability-darwin-parser-property').val('');
-    $(parent).find('#ability-darwin-parser-script').val('');
-	*/
 }
 
 function saveAbility() {
-        let parent = $('#ability-profile');
+        let abilityParent = $('#ability-profile');
 
-        let abilityValues = {
-                'name': $(parent).find('#ability-name').val(),
-                'platform': $(parent).find('#ability-platform').val(),
-                'executor': $(parent).find('#ability-executor').val(),
-                'tactic': $(parent).find('#ability-tactic').val(),
-                'technique': $(parent).find('#ability-technique-id').val(),
-                'attack_name': $(parent).find('#ability-technique-name').val(),
-                'description': $(parent).find('#ability-description').val(),
-                'command': btoa($(parent).find('#ability-command').val()),
-                'cleanup': btoa($(parent).find('#ability-cleanup').val())
-        };
-        restRequest('POST', {"index": "ac_ability_save", "key": "ability_id", "value": $(parent).find('#ability-id').val(), "data": abilityValues}, saveAbilityCallback);
+		let abilityValues = {};
+		let technique = {};
+
+		if (checkDupTestCombo()){
+			technique['attack_id'] = $(abilityParent).find('#ability-technique-id').val();
+			technique['name'] = $(abilityParent).find('#ability-technique-name').val();
+
+			abilityValues['id'] = $(abilityParent).find('#ability-id').val();
+			abilityValues['name'] = $(abilityParent).find('#ability-name').val();
+			abilityValues['description'] = $(abilityParent).find('#ability-description').val();
+			abilityValues['tactic'] = $(abilityParent).find('#ability-tactic').val();
+			abilityValues['technique'] = technique;
+			abilityValues['platforms'] = getAllTests();
+			restRequest('POST', {"index": "am_ability_save", "data": abilityValues}, saveAbilityCallback);
+		}
+		else
+		{
+			alert('A duplicate OS & Executor combination was detected. Please correct the issue and try again.');
+		}
 }
 
 function saveAbilityCallback(data) {

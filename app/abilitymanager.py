@@ -32,9 +32,7 @@ class abilitymanager:
 		try:
 			with open(confPath, 'r') as c:
 				conf = yaml.load(c, Loader=yaml.Loader)
-			self.log.debug(conf)
 			self.ctipath = os.path.expanduser(os.path.join(conf['ctipath'], 'enterprise-attack/'))
-			self.log.debug(self.ctipath)
 		except Exception as e:
 			self.log.debug('Stopped at api call.')
 			self.log.error(e)
@@ -45,12 +43,10 @@ class abilitymanager:
 		stockAbilities = []
 		self.log.debug('Checking stockpile path: {}'.format(self.stockPath))
 		if os.path.exists(self.stockPath):
-			self.log.debug(self.stockPath)
 			for root, dirs, files in os.walk(self.stockPath):
 				for procFile in files:
 					fullFile = os.path.join(root, procFile)
 					if os.path.splitext(fullFile)[-1].lower() == '.yml':
-						self.log.debug('Processing {}'.format(fullFile))
 						newAbility = {}
 						with open(fullFile, 'r') as yamlFile:
 							try:
@@ -67,9 +63,11 @@ class abilitymanager:
 								parserProperty = ''
 								parserScript = ''
 								if 'command' in rawPlatform[keyName][test].keys():
-									newTest.update({ 'command': b64encode(rawPlatform[keyName][test]['command'].encode('utf8')).decode('utf-8') }) 
+									newTest.update({ 'command': b64encode(rawPlatform[keyName][test]['command'].encode('utf-8')).decode('utf-8') }) 
 								if 'cleanup' in rawPlatform[keyName][test].keys():
 									newTest.update({ 'cleanup': b64encode(rawPlatform[keyName][test]['cleanup'].encode('utf-8')).decode('utf-8') })
+								if 'payload' in rawPlatform[keyName][test].keys():
+									newTest.update({ 'payload': rawPlatform[keyName][test]['payload'] })
 								if 'parser' in rawPlatform[keyName][test].keys():
 									if rawPlatform[keyName][test]['parser']['name']:
 										parserName = rawPlatform[keyName][test]['parser']['name']
@@ -82,7 +80,6 @@ class abilitymanager:
 									for subTest in test.split(','):
 										newTest['executor'] = subTest
 										platformData.append(newTest.copy())
-										self.log.debug(platformData)
 								else:
 									newTest['executor'] = test
 									platformData.append(newTest)
@@ -92,10 +89,106 @@ class abilitymanager:
 
 						stockAbilities.append(newAbility)
 		return stockAbilities
+	
+	async def save_ability(self, data):
+		abilityData = data.pop('data')
+		self.log.debug(abilityData)
+		newYaml = []
+		newYamlEntry = {}
+		newPlatforms = {}
+		osList = []
+
+		# Add the YAML presenter
+		yaml.add_representer(cmdStr, cmd_presenter)
+
+		# Get the OS names
+		for test in abilityData['platforms']:
+			osList.append(test['platform'])
+
+		osList = list(set(osList))
+		
+		try:
+			for osSys in osList:
+				newPlatforms[osSys] = {}
+				for test in abilityData['platforms']: 
+					if osSys == test['platform']:
+						newTest = {}
+						command = b64decode(test['command'])
+						command = command.decode('utf-8')
+						if command[0] == '\'':
+							command = command.strip('\'')
+						elif command[0] == '\"':
+							command = command.strip('\"')
+						command = command.replace('\\n','\n')
+						newTest['command'] = cmdStr(command)
+						# Check for payload
+						if 'payload' in test.keys():
+							newTest['payload'] = test['payload']
+						if 'cleanup' in test.keys():
+							cleanup = b64decode(test['cleanup'])
+							cleanup = cleanup.decode('utf-8')
+							if cleanup[0] == '\'':
+								cleanup = cleanup.strip('\'')
+							elif cleanup[0] == '\"':
+								cleanup = cleanup.strip('\"')
+							cleanup = cleanup.replace('\\n','\n')
+							newTest['cleanup'] = cmdStr(cleanup)
+						if 'parser' in test.keys():
+							newParser = {}
+							newParser['name'] = test['parser']['name']
+							newParser['property'] = test['parser']['property']
+							newParser['script'] = b64decode(test['parser']['script']).decode('utf-8')
+							newTest['parser'] = newParser
+						newPlatforms[osSys][test['executor']] = newTest
+					else:
+						pass
+
+			newYamlEntry['id'] = abilityData['id']
+			newYamlEntry['name'] = abilityData['name']
+			newYamlEntry['description'] = abilityData['description']
+			newYamlEntry['tactic'] = abilityData['tactic']
+			newYamlEntry['technique'] = abilityData['technique']
+			newYamlEntry['platforms'] = newPlatforms
+			self.log.debug(newYamlEntry)
+			newYaml.append(newYamlEntry)
+			self.log.debug(newYaml)
+		except Exception as e:
+			self.log.error(e)
+			return 'Failed to parse ability data.'
+
+		#payloadPath = os.path.join(os.path.dirname(os.path.realpath(__file__)), '../../stockpile/data/payloads/')
+		#abilityPath = os.path.join(os.path.dirname(os.path.realpath(__file__)), '../../stockpile//data/abilities/')
+		payloadPath = '/tmp/'
+		abilityPath = '/tmp/'
+
+		# Check and create payloads folder if it does not exist
+		try:
+			if not os.path.exists(payloadPath):
+				os.makedirs(payloadPath)
+		except Exception as e:
+			self.log.error(e)
+			return False
+
+		# Check and create ability folder if it does not exist
+		try:
+			if not os.path.exists(os.path.join(abilityPath, abilityData['tactic'])):
+				os.makedirs(os.path.join(abilityPath, abilityData['tactic']))
+		except Exception as e:
+			self.log.error(e)
+			return False
+
+		# Write the YAML file to the correct directory
+		try:
+			with open(os.path.join(abilityPath, abilityData['tactic'], '{}.yml'.format(abilityData['id'])), 'w') as newYAMLFile:
+				dump = yaml.dump(newYaml, default_style = None, default_flow_style = False, allow_unicode = True, encoding = None, sort_keys = False)
+				newYAMLFile.write(dump)
+		except Exception as e:
+			self.log.error(e)
+
+		return 'Ta-Da?'
 
 	@template('abilitymanager.html')
 	async def landing(self, request):
-		self.log.debug('Starting landing call.')
 		try:
 			await self.auth_svc.check_permissions(request)
 			abilities = await self.explode_stockpile()
@@ -118,6 +211,7 @@ class abilitymanager:
 			),
 			POST=dict(
 				am_ability=lambda d: self.explode_stockpile(**d),
+				am_ability_save=lambda d: self.save_ability(data=d)
 			),
 			DELETE=dict(
 			)
@@ -125,6 +219,5 @@ class abilitymanager:
 		try:
 			output = await options[request.method][index](data)
 		except Exception as e:
-			self.log.debug('Stopped at api call.')
 			self.log.error(e)
 		return web.json_response(output)

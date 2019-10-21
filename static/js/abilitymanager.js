@@ -1,4 +1,4 @@
-function restRequest(type, data, callback, endpoint='/plugin/atomiccaldera/rest') {
+function restRequest(type, data, callback, endpoint='/plugin/abilitymanager/rest') {
         $.ajax({
                 url: endpoint,
                 type: type,
