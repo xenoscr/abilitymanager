@@ -441,3 +441,39 @@ table.dataTable tr.selected td.select-checkbox:after {
 	border-radius: 25px;
 	width: 75%;
 }
+.ability-tests-table span {
+	color: white;
+	background-color: darkgreen;
+	font-family: var(--default-font);
+	font-weight: 400;
+	font-size: 30px;
+	height: 35px;
+	margin-top: 20px;
+	margin-bottom: 20px;
+	margin-left: 20px;
+	margin-right: 20px;
+	padding: 5px;
+	padding-left: 10px;
+	padding-right: 10px;
+	border: none;
+	border-radius: 5px;
+	width: 75%;
+}
+.ability-tests-table span#delete-test-span {
+	color: white;
+	background-color: darkred;
+	font-weight: 400;
+	font-size: 30px;
+	font-family: var(--default-font);
+	height: 35px;
+	margin-top: 20px;
+	margin-bottom: 20px;
+	margin-left: 20px;
+	margin-right: 20px;
+	padding: 5px;
+	padding-left: 15px;
+	padding-right: 15px;
+	border: none;
+	border-radius: 5px;
+	width: 75%;
+}

@@ -38,6 +38,14 @@ class abilitymanager:
 			self.log.error(e)
 			pass
 
+	async def get_uuid(self, data):
+		try:
+			return str(uuid.uuid4())
+		except Exception as e:
+			self.log.debug('Error getting UUID.')
+			self.log.error('e')
+			return 'Failure'
+
 	async def explode_stockpile(self):
 		self.log.debug('Starting stockpile ability explosion')
 		stockAbilities = []
@@ -211,7 +219,8 @@ class abilitymanager:
 			),
 			POST=dict(
 				am_ability=lambda d: self.explode_stockpile(**d),
-				am_ability_save=lambda d: self.save_ability(data=d)
+				am_ability_save=lambda d: self.save_ability(data=d),
+				am_get_uuid=lambda d: self.get_uuid(data=d)
 			),
 			DELETE=dict(
 			)

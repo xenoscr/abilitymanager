@@ -136,7 +136,7 @@ function addTest(testNum, test){
 			parserProperty = '';
 			parserScript = '';
 		}
-		$('table.ability-tests-table tbody tr:last').after('<tr />').attr('class', 'test-heading-' + testNum).append($('<td />').attr('class', 'test-title-' + testNum).append($('<H3 />').text('Test ' + testNum + ':'))).append($('<td />').attr('class', 'test-delete-' + testNum).append($('<button />', {id: 'delete-test-' + testNum, type: 'button', class: 'ability-delete-button', onclick: 'deleteTest('+ testNum + ');'}).html('Delete Test')));
+		$('table.ability-tests-table tbody tr:last').after('<tr />').attr('class', 'test-heading-' + testNum).append($('<td />').attr('class', 'test-title-' + testNum).append($('<H3 />').text('Test ' + testNum + ':'))).append($('<td />').attr('class', 'test-delete-' + testNum).attr('align', 'right').append($('<span />', {id: 'delete-test-span', class: 'ability-delete-span', onclick: 'deleteTest('+ testNum + ');'}).html('-')));
 		$('table.ability-tests-table tbody tr:last').after('<tr />').attr('class', 'test-sub-header-row').append($('<td />').attr('class', 'test-sub-header')).append($('<td />').attr('style', 'text-align:left').attr('class', 'test-sub-header').append($('<h4>').text('Command Details:')));
 		$('table.ability-tests-table tbody tr:last').after('<tr />').attr('class', 'test-row1-' + testNum).append($('<td />').attr('class', 'test-platform-name-' + testNum).append($('<p />').text('Platform:'))).append($('<td />').attr('class', 'test-platform-value-' + testNum).append($('<select />').append($('<option />', {value: 'windows', text: 'windows'})).append($('<option />', {value: 'linux', text: 'linux'})).append($('<option />', {value: 'darwin', text: 'darwin'})).val(test.platform).change()));
 		$('table.ability-tests-table tbody tr:last').after('<tr />').attr('class', 'test-row2-' + testNum).append($('<td />').attr('class', 'test-executor-name-' + testNum).append($('<p />').text('Executor:'))).append($('<td />').attr('class', 'test-executor-value-' + testNum).append($('<select />').append($('<option />', {value: 'cmd', text: 'cmd'})).append($('<option />', {value: 'psh', text: 'psh'})).append($('<option />', {value: 'pwsh', text: 'pwsh'})).append($('<option />', {value: 'sh', text: 'sh'})).val(test.executor).change()));
@@ -215,6 +215,7 @@ function deleteTest(testNum){
 	testCounter = 0;
 	
 	$('table.ability-tests-table tbody tr:last').after('<tr />').attr('class', 'test-platform-heading').append($('<td />').attr('class', 'test-platform-title').append($('<H2 />').text('Platforms:'))).append('<td />').attr('class', 'test-platform-title');
+	$('table.ability-tests-table tbody tr.test-platform-title td:last').append($('<span />', { 'onclick': 'addEmptyTest();' }).html('+')).attr('align', 'right');
 	for (i = 0; i < allTests.length; i++){
 		if (i != testNum)
 		{
@@ -238,6 +239,7 @@ function loadAbility() {
     $(parent).find('#ability-description').val($(chosen).data('description'));
 
 	$('table.ability-tests-table tbody tr:last').after('<tr />').attr('class', 'test-platform-heading').append($('<td />').attr('class', 'test-platform-title').append($('<H2 />').text('Platforms:'))).append('<td />').attr('class', 'test-platform-title');
+	$('table.ability-tests-table tbody tr.test-platform-title td:last').append($('<span />', { 'onclick': 'addEmptyTest();' }).html('+')).attr('align', 'right');
 	$(chosen).data('tests').forEach(function(test) {
 		addTest(testCounter, test);	
 		testCounter++;
@@ -282,11 +284,39 @@ function saveAbility() {
 }
 
 function saveAbilityCallback(data) {
-        $('p.process-status').html('<p>' + data + '</p><center><button id="reloadPage" class="atomic-button">Reload Page</button></center>');
+	$('p.process-status').html('<p>' + data + '</p><center><button id="reloadPage" class="atomic-button">Reload Page</button></center>');
     $('#reloadPage').click(function() {
-        location.reload();
-        });
+		location.reload();
+	});
 }
+
+function getUUID() {
+	restRequest('POST', { "index": "am_get_uuid", "data": {}  }, getUUIDCallback);
+}
+
+function getUUIDCallback(data) {
+    let parent = $('#ability-profile');
+    $(parent).find('#ability-id').val(data);
+}
+
+function addEmptyTest() {
+	curTest = {};
+	curParser = {};
+	curTest['platform'] = '';
+	curTest['executor'] = '';
+	curTest['command'] = '';
+
+	let testCount = $('[class^=test-heading-]').length;
+
+	addTest(testCount, curTest);
+}
+
+function createNewAbility() {
+	clearAbility();
+	getUUID();
+	$('table.ability-tests-table tbody tr:last').after('<tr />').attr('class', 'test-platform-heading').append($('<td />').attr('class', 'test-platform-title').append($('<H2 />').text('Platforms:'))).append('<td />').attr('class', 'test-platform-title');
+	$('table.ability-tests-table tbody tr.test-platform-title td:last').append($('<span />', { 'onclick': 'addEmptyTest();' }).html('+')).attr('align', 'right');
+};
 
 function saveVariables() {
         let ability_id = $('#ability-profile').find('#ability-id').val();
