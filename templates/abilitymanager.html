@@ -10,7 +10,7 @@
                 <link rel="stylesheet" href="/abilitymanager/css/basic.css">
                 <link rel="stylesheet" href="/abilitymanager/css/timeline.css">
         </head>
-        <body>
+        <body onload="getMITRETactics();">
                 <div class="topnav">
                         <a href="/">Home</a>
                         <a class="active" href="/plugin/abilitymanager/gui">Ability Manager</a>
@@ -85,15 +85,15 @@
                                                                         </tr>
                                                                         <tr>
                                                                                 <td><p>ATT&CK Tactic:</p></td>
-                                                                                <td><input id="ability-tactic" spellcheck="false"/></td>
+                                                                                <td><select id="ability-tactic" spellcheck="false"/></td>
                                                                         </tr>
                                                                         <tr>
                                                                                 <td><p>ATT&CK Technique ID:</p></td>
-                                                                                <td><input id="ability-technique-id" spellcheck="false"/></td>
+                                                                                <td><p id="ability-technique-id" spellcheck="false"/></td>
                                                                         </tr>
                                                                         <tr>
                                                                                 <td><p>ATT&CK Technique Name:</p></td>
-                                                                                <td><input id="ability-technique-name" spellcheck="false"/></td>
+                                                                                <td><select id="ability-technique-name" spellcheck="false"/></td>
                                                                         </tr>
                                                                         <tr>
                                                                                 <td><p>Name:</p></td>
@@ -120,6 +120,12 @@
                         <div id="ability-data" class="ability-data" style="display:none">
                                 <pre>{{ abilities }}</pre>
                         </div>
+						<div id="mitre-tactic-data" class="mitre-tactic-data" style="display:none">
+							<pre></pre>
+						</div>
+						<div id="mitre-technique-data" class="mitre-technique-data" style="display:none">
+							<pre></pre>
+						</div>
                         <div id="variable-data" class="ability-data" style="display:none">
                                 <pre>{{ variables }}</pre>
                         </div>

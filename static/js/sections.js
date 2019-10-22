@@ -94,6 +94,25 @@ function populateTacticAbilities(){
     $('#ability-tactic-filter').css('opacity',1.0);
 }
 
+function populateAbilityTacticOptions() {
+	let tactics = JSON.parse($('#mitre-tactic-data pre').text());
+	$('#ability-tactic').append($('<option />', { 'value': '', 'disabled': 'true', 'selected': 'true' }).text('N/A'));
+	tactics.forEach(function(tactic) {
+		$('#ability-tactic').append($('<option />', { 'value': tactic }).text(tactic));
+	});
+}
+
+async function populateAbilityTechniqueOptions(tactic) {
+	getMITRETechniques(tactic);
+	await sleep(500);
+	let techniques = JSON.parse($('#mitre-technique-data pre').text());
+	$('#ability-technique-name').append($('<option />', { 'value': '', 'disabled': 'true', 'selected': 'true' }).text('N/A'));
+	techniques.forEach(function(technique) {
+		console.log(technique);
+		$('#ability-technique-name').append($('<option />', { 'value': technique.id }).text(technique.name));
+	});
+}
+
 function appendAbilityToList(tactic, value) {
     $('#ability-profile').find('#ability-test').append($("<option></option>")
         .attr("name",value['name'])
@@ -115,6 +134,7 @@ function clearAbilityDossier(){
 		$(this).val('');
         $(this).html('');
     });
+	$('#abiliity-tactics').empty();
 	clearTests();
 }
 
@@ -225,7 +245,11 @@ function deleteTest(testNum){
 	}
 }
 
-function loadAbility() {
+function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+async function loadAbility() {
     let parent = $('#ability-profile');
 	let testCounter = 0;
     clearAbilityDossier();
@@ -233,8 +257,9 @@ function loadAbility() {
     let chosen = $('#ability-test option:selected');
     $(parent).find('#ability-id').val($(chosen).attr('ability_id'));
     $(parent).find('#ability-name').val($(chosen).attr('name'));
-    $(parent).find('#ability-tactic').val($(chosen).data('tactic'));
-    $(parent).find('#ability-technique-id').val($(chosen).data('attack_id'));
+    $(parent).find('#ability-tactic').val($(chosen).data('tactic')).change();
+	await populateAbilityTechniqueOptions();
+    $(parent).find('#ability-technique-id').val($(chosen).data('attack_id')).change();
     $(parent).find('#ability-technique-name').val($(chosen).data('attack_name'));
     $(parent).find('#ability-description').val($(chosen).data('description'));
 
@@ -297,6 +322,22 @@ function getUUID() {
 function getUUIDCallback(data) {
     let parent = $('#ability-profile');
     $(parent).find('#ability-id').val(data);
+}
+
+function getMITRETactics() {
+	restRequest('POST', { "index": "am_get_tactics", "data": {} }, getMITRETacticsCallback);
+}
+
+function getMITRETacticsCallback(data) {
+	$('#mitre-tactic-data pre').text(JSON.stringify(data));
+}
+
+function getMITRETechniques(tactic) {
+	restRequest('POST', { "index": "am_get_techniques", "data": tactic }, getMITRETechniquesCallback);
+}
+
+function getMITRETechniquesCallback(data) {
+	$('#mitre-technique-data pre').text(JSON.stringify(data));
 }
 
 function addEmptyTest() {

@@ -28,6 +28,9 @@ class abilitymanager:
 
 	def get_conf(self):
 		confPath = os.path.join(os.path.dirname(os.path.realpath(__file__)), '../conf/amconf.yml')
+		with open(confPath, 'r') as c:
+                                conf = yaml.load(c, Loader=yaml.Loader)
+		self.ctipath = os.path.expanduser(os.path.join(conf['ctipath'], 'enterprise-attack/'))
 		self.log.debug('Getting local configuration from: {}'.format(confPath))
 		try:
 			with open(confPath, 'r') as c:
@@ -45,6 +48,44 @@ class abilitymanager:
 			self.log.debug('Error getting UUID.')
 			self.log.error('e')
 			return 'Failure'
+
+	
+	async def getMITRETactics(self):
+		tacticList = []
+		tactics = {}
+		matrix = self.fs.query([
+			Filter('type', '=', 'x-mitre-matrix'),
+		])
+
+		for i in range(len(matrix)):
+			tactics[matrix[i]['name']] = []
+			for tactic_id in matrix[i]['tactic_refs']:
+				tactics[matrix[i]['name']].append(self.fs.query([Filter('id', '=', tactic_id)])[0])    
+		
+		for tactic in tactics['Enterprise ATT&CK']:
+			tacticList.append(tactic['name'].replace(' ', '-').lower())
+
+		return tacticList
+
+	async def getMITRETechniques(self, data):
+		tactic = data['data']
+		techniques = []
+		filter = [
+			Filter('type', '=', 'attack-pattern'),
+			Filter('kill_chain_phases.phase_name', '=', tactic)
+		]
+		results = self.fs.query(filter)
+
+		# This is used in the official documentation. I'm not sure it is needed.
+		doubleCheck = [t for t in results if {
+			'kill_chain_name' : 'mitre-attack',
+			'phase_name' : tactic,
+		} in t.kill_chain_phases]
+
+		for entry in doubleCheck:
+			techniques.append({ 'tactic': tactic, 'name': entry['name'], 'id': entry['external_references'][0]['external_id'] })
+
+		return techniques
 
 	async def explode_stockpile(self):
 		self.log.debug('Starting stockpile ability explosion')
@@ -220,7 +261,9 @@ class abilitymanager:
 			POST=dict(
 				am_ability=lambda d: self.explode_stockpile(**d),
 				am_ability_save=lambda d: self.save_ability(data=d),
-				am_get_uuid=lambda d: self.get_uuid(data=d)
+				am_get_uuid=lambda d: self.get_uuid(data=d),
+				am_get_tactics=lambda d: self.getMITRETactics(),
+				am_get_techniques=lambda d: self.getMITRETechniques(data=d)
 			),
 			DELETE=dict(
 			)
