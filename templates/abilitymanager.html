@@ -10,7 +10,7 @@
                 <link rel="stylesheet" href="/abilitymanager/css/basic.css">
                 <link rel="stylesheet" href="/abilitymanager/css/timeline.css">
         </head>
-        <body onload="getMITRETactics();">
+        <body>
                 <div class="topnav">
                         <a href="/">Home</a>
                         <a class="active" href="/plugin/abilitymanager/gui">Ability Manager</a>
@@ -28,7 +28,7 @@
                                                         <span class="icon"><img src=""/></span>
                                                         <span class="caption">Refresh Abilities</span>
                                                 </button>
-                                                <button id="New Ability" type="button" class="row-toolbar-button" onclick="createNewAbility()">
+                                                <button id="New Ability" type="button" class="row-toolbar-button" onclick="createNewAbility();updateButtonState('#saveAbility','valid');">
                                                         <span class="icon"><img src=""/></span>
                                                         <span class="caption">New Ability</span>
                                                 </button>
@@ -65,13 +65,13 @@
                                                                 <h4>Manage abilities</h4>
                                                                 <p>View available techniques</p>
                                                                 <center>
-                                                                        <select id="ability-tactic-filter" onchange="populateTacticAbilities();updateButtonState('#saveAbility', 'invalid');updateButtonState('#saveVariables', 'invalid');updateNavButtonState('#exportOneAbility', 'invalid');">
+                                                                        <select id="ability-tactic-filter" onchange="populateTacticAbilities();updateButtonState('#saveAbility', 'invalid');">
                                                                                 <option value="" disabled selected>Select ATT&CK tactic</option>
                                                                                 {% for tactic in tactics %}
                                                                                         <option value{{ tactic }} data-tactic={{ tactic }}>{{ tactic }}</option>
                                                                                 {% endfor %}
                                                                         </select>
-                                                                        <select id="ability-test" onchange="loadAbility();updateButtonState('#saveAbility','valid');updateButtonState('#saveVariables', 'valid');updateNavButtonState('#exportOneAbility', 'valid');">
+                                                                        <select id="ability-test" onchange="loadAbility();updateButtonState('#saveAbility','valid');">
                                                                                 <option value="" disabled selected>Select ability</option>
                                                                         </select>
                                                                         <button id="saveAbility" type="button" class="button-notready atomic-button" onclick="saveAbility();">Save Ability</button>
@@ -81,19 +81,15 @@
                                                                 <table style="width:100%;border-spacing:20px;border-collapse:collapse;" class="ability-table">
                                                                         <tr>
                                                                                 <td><p>Ability ID:</p></td>
-                                                                                <td><input id="ability-id"/></td>
+                                                                                <td><p id="ability-id"/></td>
                                                                         </tr>
                                                                         <tr>
                                                                                 <td><p>ATT&CK Tactic:</p></td>
-                                                                                <td><select id="ability-tactic" spellcheck="false"/></td>
+                                                                                <td><select id="ability-tactic" spellcheck="false" onchange="populateAbilityTechniqueOptions();"/></td>
                                                                         </tr>
                                                                         <tr>
-                                                                                <td><p>ATT&CK Technique ID:</p></td>
-                                                                                <td><p id="ability-technique-id" spellcheck="false"/></td>
-                                                                        </tr>
-                                                                        <tr>
-                                                                                <td><p>ATT&CK Technique Name:</p></td>
-                                                                                <td><select id="ability-technique-name" spellcheck="false"/></td>
+                                                                                <td><p>ATT&CK Technique:</p></td>
+                                                                                <td><select id="ability-technique" spellcheck="false"/></td>
                                                                         </tr>
                                                                         <tr>
                                                                                 <td><p>Name:</p></td>
@@ -121,14 +117,11 @@
                                 <pre>{{ abilities }}</pre>
                         </div>
 						<div id="mitre-tactic-data" class="mitre-tactic-data" style="display:none">
-							<pre></pre>
+							<pre>{{ fulltactics }}</pre>
 						</div>
-						<div id="mitre-technique-data" class="mitre-technique-data" style="display:none">
-							<pre></pre>
+						<div id="mitre-technique-data" class="mitre-tactic-data" style="display:none">
+							<pre>{{ techniques }}</pre>
 						</div>
-                        <div id="variable-data" class="ability-data" style="display:none">
-                                <pre>{{ variables }}</pre>
-                        </div>
                 </div>
         </body>
         <script src="/gui/jquery/jquery.js"></script>

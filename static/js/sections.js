@@ -1,45 +1,5 @@
 // Portions of this code were borrowed from MITRE's Caldera chain plugin. All credits to them for anything I have reused.
 
-function addAbilities() {
-        $('p.process-status').html('<p>Adding abilities, please wait...</p><p>This does take a while, please be patient.</p>')
-        updateNavButtonState('#addAbilities', 'invalid');
-        updateNavButtonState('#reloadAbilities', 'invalid');
-        updateNavButtonState('#exportOneAbility', 'invalid');
-        updateNavButtonState('#exportAllToAbilities', 'invalid');
-        updateButtonState('#saveAbility', 'invalid');
-        updateButtonState('#saveVariables', 'invalid');
-        $('select#ability-tactic-filter').prop("disabled", true);
-        $('select#ability-test').prop("disabled", true);
-        restRequest('PUT', {"index": "ac_ability"}, addAbilitiesCallback);
-}
-
-function addAbilitiesCallback(data) {
-        alert(data);
-        $('p.process-status').html(data);
-        location.reload();
-}
-
-function refreshAbilities() {
-        $('p.process-status').html('<p>Refreshing abilities...</p>');
-        restRequest('PUT', {"index": "am_ability"}, refreshAbilitiesCallback);
-}
-
-function refreshAbilitiesCallback(data) {
-        alert(data);
-        $('p.process-status').html(data);
-}
-
-function reloadAbilities() {
-        $('p.process-status').html('<p>Clicking "YES" will delete all ability and variable data. <b>WARNING: You will lose all current UUIDs!</b> Are you sure?</p><center><button id="yoloDelete" class="atomic-button" style="background-color:darkred;">YES</button><button id="safeNo" class="atomic-button" style="background-color:green;">NO</button></center>');
-        $('#yoloDelete').click(function() {
-                $('p.process-status').html('<p>Reloading abilities, please wait...</p><p>This does take a while, please be patient.</p>')
-                deleteAll();
-        });
-        $('#safeNo').click(function() {
-                $('p.process-status').html('Reload process cancled.');
-        });
-}
-
 $(document).ready(function () {
     $("#ability-property-filter option").val(function(idx, val) {
         $(this).siblings('[value="'+ val +'"]').remove();
@@ -58,25 +18,108 @@ $(document).ready(function () {
     });
 });
 
-function deleteAll() {
-        clearAbility();
-        clearVariables();
-        updateNavButtonState('#addAbilities', 'invalid');
-        updateNavButtonState('#reloadAbilities', 'invalid');
-        updateNavButtonState('#exportOneAbility', 'invalid');
-        updateNavButtonState('#exportAllToAbilities', 'invalid');
-        updateButtonState('#saveAbility', 'invalid');
-        updateButtonState('#saveVariables', 'invalid');
-        $('select#ability-tactic-filter').prop("disabled", true);
-        $('select#ability-test').prop("disabled", true);
-        restRequest('DELETE', {"index": "delete_all"}, deleteAllCallback);
+async function loadAbility() {
+    let parent = $('#ability-profile');
+	let testCounter = 0;
+    clearAbilityDossier();
+
+    let chosen = $('#ability-test option:selected');
+    $(parent).find('#ability-id').text($(chosen).attr('ability_id'));
+    $(parent).find('#ability-name').val($(chosen).attr('name'));
+	populateAbilityTacticOptions();
+    $(parent).find('#ability-tactic').val($(chosen).data('tactic')).change();
+	populateAbilityTechniqueOptions();
+    $(parent).find('#ability-technique').val($(chosen).data('attack_id') + ' | ' + $(chosen).data('attack_name')).change();
+    $(parent).find('#ability-description').val($(chosen).data('description'));
+
+	$('table.ability-tests-table tbody tr:last').after('<tr />').attr('class', 'test-platform-heading').append($('<td />').attr('class', 'test-platform-title').append($('<H2 />').text('Platforms:'))).append('<td />').attr('class', 'test-platform-title');
+	$('table.ability-tests-table tbody tr.test-platform-title td:last').append($('<span />', { 'onclick': 'addEmptyTest();' }).html('+')).attr('align', 'right');
+	$(chosen).data('tests').forEach(function(test) {
+		addTest(testCounter, test);	
+		testCounter++;
+	});
+
 }
 
-function deleteAllCallback() {
-        $('p.process-status').html('<p>Abilities have been deleted.</p>');
-        addAbilities();
-        location.reload();
+function createNewAbility() {
+	clearAbility();
+	getUUID();
+	populateAbilityTacticOptions();
+	$('table.ability-tests-table tbody tr:last').after('<tr />').attr('class', 'test-platform-heading').append($('<td />').attr('class', 'test-platform-title').append($('<H2 />').text('Platforms:'))).append('<td />').attr('class', 'test-platform-title');
+	$('table.ability-tests-table tbody tr.test-platform-title td:last').append($('<span />', { 'onclick': 'addEmptyTest();' }).html('+')).attr('align', 'right');
+};
+
+// API Handlers
+
+function refreshAbilities() {
+        $('p.process-status').html('<p>Refreshing abilities...</p>');
+        restRequest('PUT', {"index": "am_ability"}, refreshAbilitiesCallback);
 }
+
+function refreshAbilitiesCallback(data) {
+        alert(data);
+        $('p.process-status').html(data);
+}
+
+function saveAbility() {
+	// Clear the status
+	$('p.process-status').html('<p></p>');
+	let abilityParent = $('#ability-profile');
+
+	let abilityValues = {};
+	let technique = {};
+
+	if (checkDupTestCombo() && checkTestsValid() && checkBasicAbility()){
+		technique['attack_id'] = $(abilityParent).find('#ability-technique option:selected').data('attack_id');
+		technique['name'] = $(abilityParent).find('#ability-technique option:selected').data('attack_name');
+
+		abilityValues['id'] = $(abilityParent).find('#ability-id').text();
+		abilityValues['name'] = $(abilityParent).find('#ability-name').val();
+		abilityValues['description'] = $(abilityParent).find('#ability-description').val();
+		abilityValues['tactic'] = $(abilityParent).find('#ability-tactic').val();
+		abilityValues['technique'] = technique;
+		abilityValues['platforms'] = getAllTests();
+		restRequest('POST', {"index": "am_ability_save", "data": abilityValues}, saveAbilityCallback);
+	}
+	else
+	{
+		alert('Errors were found, please review the status pain for details. To procede, please correct the issue and try again.');
+	}
+}
+
+function saveAbilityCallback(data) {
+	$('p.process-status').html('<p>' + data + '</p><center><button id="reloadPage" class="atomic-button">Reload Page</button></center>');
+    $('#reloadPage').click(function() {
+		location.reload();
+	});
+}
+
+function getUUID() {
+	restRequest('POST', { "index": "am_get_uuid", "data": {}  }, getUUIDCallback);
+}
+
+function getUUIDCallback(data) {
+    let parent = $('#ability-profile');
+    $(parent).find('#ability-id').text(data);
+}
+
+function getMITRETactics() {
+	restRequest('POST', { "index": "am_get_tactics", "data": {} }, getMITRETacticsCallback);
+}
+
+function getMITRETacticsCallback(data) {
+	$('#mitre-tactic-data pre').text(JSON.stringify(data));
+}
+
+function getMITRETechniques(tactic) {
+	restRequest('POST', { "index": "am_get_techniques", "data": tactic }, getMITRETechniquesCallback);
+}
+
+function getMITRETechniquesCallback(data) {
+	$('#mitre-technique-data pre').text(JSON.stringify(data));
+}
+
+// Populators
 
 function populateTacticAbilities(){
         let exploits = JSON.parse($('#ability-data pre').text());
@@ -96,21 +139,69 @@ function populateTacticAbilities(){
 
 function populateAbilityTacticOptions() {
 	let tactics = JSON.parse($('#mitre-tactic-data pre').text());
+	clearAbilityTacticOptions();
 	$('#ability-tactic').append($('<option />', { 'value': '', 'disabled': 'true', 'selected': 'true' }).text('N/A'));
 	tactics.forEach(function(tactic) {
-		$('#ability-tactic').append($('<option />', { 'value': tactic }).text(tactic));
+		$('#ability-tactic').append($('<option />', { 'value': tactic.replace(' ', '-').toLowerCase() }).text(tactic.replace(' ', '-').toLowerCase()));
 	});
 }
 
-async function populateAbilityTechniqueOptions(tactic) {
-	getMITRETechniques(tactic);
-	await sleep(500);
+function populateAbilityTechniqueOptions() {
 	let techniques = JSON.parse($('#mitre-technique-data pre').text());
-	$('#ability-technique-name').append($('<option />', { 'value': '', 'disabled': 'true', 'selected': 'true' }).text('N/A'));
-	techniques.forEach(function(technique) {
-		console.log(technique);
-		$('#ability-technique-name').append($('<option />', { 'value': technique.id }).text(technique.name));
+	clearAbilityTechniqueOptions();
+	$('#ability-technique').append($('<option />', { 'value': '', 'disabled': 'true', 'selected': 'true' }).text('N/A'));
+	techniques.sort((a, b) => (a.id > b.id) ? 1 : -1).forEach(function(technique) {
+		if (technique.tactic == $('#ability-tactic option:selected').text().replace(' ', '-').toLowerCase()) {
+			textVal = technique.id + ' | ' + technique.name;
+			$('#ability-technique').append($('<option />', { 'value': textVal }).text(textVal).data('attack_id', technique.id).data('attack_name', technique.name));
+		}
 	});
+}
+
+// Clearers
+
+function clearAbilityDossier(){
+    $('#ability-profile .ability-table tr:last td:input,ol').each(function(){
+        $(this).val('');
+        $(this).empty();
+    });
+    $('#ability-profile').find('textarea').each(function(){
+		$(this).val('');
+        $(this).html('');
+    });
+	clearAbilityTacticOptions();
+	clearTests();
+}
+
+function clearTests(){
+	$('table.ability-tests-table tbody tr').remove();
+	$('table.ability-tests-table tbody').append('<tr />');
+}
+
+function clearAbilityTacticOptions() {
+	$('#ability-tactic').empty();
+}
+
+function clearAbilityTechniqueOptions() {
+	$('#ability-technique').empty();
+}
+
+function clearParser(number){
+	$('td.test-parser-name-value-'+number+' select').prop('selectedIndex', -1)
+	$('td.test-parser-property-value-'+number+' input').val('');
+	$('td.test-parser-script-value-'+number+' input').val('');
+}
+
+function clearAbility() {
+    let parent = $('#ability-profile');
+    clearAbilityDossier();
+
+    $(parent).find('#ability-id').text('');
+    $(parent).find('#ability-name').val('');
+    $(parent).find('#ability-tactic').val('');
+    $(parent).find('#ability-technique-id').val('');
+    $(parent).find('#ability-technique').val('');
+    $(parent).find('#ability-description').val('');
 }
 
 function appendAbilityToList(tactic, value) {
@@ -125,23 +216,7 @@ function appendAbilityToList(tactic, value) {
         .text(value['name']));
 }
 
-function clearAbilityDossier(){
-    $('#ability-profile .ability-table tr:last td:input,ol').each(function(){
-        $(this).val('');
-        $(this).empty();
-    });
-    $('#ability-profile').find('textarea').each(function(){
-		$(this).val('');
-        $(this).html('');
-    });
-	$('#abiliity-tactics').empty();
-	clearTests();
-}
-
-function clearTests(){
-	$('table.ability-tests-table tbody tr').remove();
-	$('table.ability-tests-table tbody').append('<tr />');
-}
+// Test manipulation
 
 function addTest(testNum, test){
 		if (test.parser)
@@ -171,7 +246,7 @@ function addTest(testNum, test){
 			$('table.ability-tests-table tbody tr:last').after('<tr />').attr('class', 'test-row5-' + testNum).append($('<td />').attr('class', 'test-payload-name-' + testNum).append($('<p />').text('Payload:'))).append($('<td />').attr('class', 'test-payload-value-' + testNum).append($('<input />').val(test.payload)));
 		else
 			$('table.ability-tests-table tbody tr:last').after('<tr />').attr('class', 'test-row5-' + testNum).append($('<td />').attr('class', 'test-payload-name-' + testNum).append($('<p />').text('Payload:'))).append($('<td />').attr('class', 'test-payload-value-' + testNum).append($('<input />').val('')));
-		$('table.ability-tests-table tbody tr:last').after('<tr />').attr('class', 'test-sub-header-row').append($('<td />').attr('class', 'test-sub-header')).append($('<td />').attr('style', 'text-align:left').attr('class', 'test-sub-header').append($('<h4>').text('Parser:')));
+		$('table.ability-tests-table tbody tr:last').after('<tr />').attr('class', 'test-sub-header-row').append($('<td />').attr('class', 'test-sub-header')).append($('<td />').attr('style', 'text-align:left').attr('class', 'test-sub-header').append($('<h4>').text('Parser:')).append($('<button />').attr('type', 'button').attr('class', 'test-parser-delete-button-'+ testNum).attr('onclick', 'clearParser('+ testNum +');').html('Clear Parser')));
 		$('table.ability-tests-table tbody tr:last').after('<tr />').attr('class', 'test-row6-' + testNum).append($('<td />').attr('class', 'test-parser-name-name-' + testNum).append($('<p />').text('Parser Name:'))).append($('<td />').attr('class', 'test-parser-name-value-' + testNum).append($('<select />').append($('<option />', {value: 'line', text: 'line'})).append($('<option />', {value: 'host', text: 'host'})).append($('<option />', {value: 'json', text: 'json'})).append($('<option />', {value: 'regex', text: 'regex'})).val(parserName).change()));
 		$('table.ability-tests-table tbody tr:last').after('<tr />').attr('class', 'test-row7-' + testNum).append($('<td />').attr('class', 'test-parser-property-name-' + testNum).append($('<p />').text('Parser Property:'))).append($('<td />').attr('class', 'test-parser-property-value-' + testNum).append($('<input>').val(parserProperty)));
 		$('table.ability-tests-table tbody tr:last').after('<tr />').attr('class', 'test-row8-' + testNum).append($('<td />').attr('class', 'test-parser-script-name-' + testNum).append($('<p />').text('Parser script:'))).append($('<td />').attr('class', 'test-parser-script-value-' + testNum).append($('<input>').val(parserScript)));
@@ -189,9 +264,9 @@ function getAllTests(){
 		curParser = {};
 		curTest['platform'] = $('td.test-platform-value-'+i+' select option:selected').text();
 		curTest['executor'] = $('td.test-executor-value-'+i+' select option:selected').text();
-		curTest['command'] = btoa($('td.test-command-value-'+i+' textarea').text());
+		curTest['command'] = btoa($('td.test-command-value-'+i+' textarea').val());
 		if ($('td.test-cleanup-value-'+i+' textarea').text() != '')
-			curTest['cleanup'] = btoa($('td.test-cleanup-value-'+i+' textarea').text());
+			curTest['cleanup'] = btoa($('td.test-cleanup-value-'+i+' textarea').val());
 		if ($('td.test-payload-value-'+i+' input').val())
 			curTest['payload'] = $('td.test-payload-value-'+i+' input').val();
 		if ($('td.test-parser-name-value-'+i+' select option:selected').text() != '')
@@ -201,32 +276,10 @@ function getAllTests(){
 			curParser['script'] = btoa($('td.test-parser-script-value-'+i+' input').val());
 			curTest['parser'] = curParser;
 		}
+		console.log(curTest);
 		allTests.push(curTest);
 	}
 	return allTests;
-}
-
-function checkDupTestCombo(){ 
-	let testCount = $('[class^=test-heading-]').length;
-
-	let testCombos = {};
-
-	for (i = 0; i < testCount; i++)
-	{
-		curTest = {};
-		curTest[$('td.test-platform-value-'+i+' select option:selected').text()] = $('td.test-executor-value-'+i+' select option:selected').text();
-
-		for (let [key, value] of Object.entries(testCombos))
-		{
-			curTestEntry = Object.entries(curTest)[0];
-			if ((key == curTestEntry[0]) && (value == curTestEntry[1]))
-			{
-				return false;
-			}
-		}
-		Object.assign(testCombos, curTest);
-	}
-	return true;
 }
 
 function deleteTest(testNum){
@@ -245,101 +298,6 @@ function deleteTest(testNum){
 	}
 }
 
-function sleep(ms) {
-  return new Promise(resolve => setTimeout(resolve, ms));
-}
-
-async function loadAbility() {
-    let parent = $('#ability-profile');
-	let testCounter = 0;
-    clearAbilityDossier();
-
-    let chosen = $('#ability-test option:selected');
-    $(parent).find('#ability-id').val($(chosen).attr('ability_id'));
-    $(parent).find('#ability-name').val($(chosen).attr('name'));
-    $(parent).find('#ability-tactic').val($(chosen).data('tactic')).change();
-	await populateAbilityTechniqueOptions();
-    $(parent).find('#ability-technique-id').val($(chosen).data('attack_id')).change();
-    $(parent).find('#ability-technique-name').val($(chosen).data('attack_name'));
-    $(parent).find('#ability-description').val($(chosen).data('description'));
-
-	$('table.ability-tests-table tbody tr:last').after('<tr />').attr('class', 'test-platform-heading').append($('<td />').attr('class', 'test-platform-title').append($('<H2 />').text('Platforms:'))).append('<td />').attr('class', 'test-platform-title');
-	$('table.ability-tests-table tbody tr.test-platform-title td:last').append($('<span />', { 'onclick': 'addEmptyTest();' }).html('+')).attr('align', 'right');
-	$(chosen).data('tests').forEach(function(test) {
-		addTest(testCounter, test);	
-		testCounter++;
-	});
-
-}
-
-function clearAbility() {
-    let parent = $('#ability-profile');
-    clearAbilityDossier();
-
-    $(parent).find('#ability-id').val('');
-    $(parent).find('#ability-name').val('');
-    $(parent).find('#ability-tactic').val('');
-    $(parent).find('#ability-technique-id').val('');
-    $(parent).find('#ability-technique-name').val('');
-    $(parent).find('#ability-description').val('');
-}
-
-function saveAbility() {
-        let abilityParent = $('#ability-profile');
-
-		let abilityValues = {};
-		let technique = {};
-
-		if (checkDupTestCombo()){
-			technique['attack_id'] = $(abilityParent).find('#ability-technique-id').val();
-			technique['name'] = $(abilityParent).find('#ability-technique-name').val();
-
-			abilityValues['id'] = $(abilityParent).find('#ability-id').val();
-			abilityValues['name'] = $(abilityParent).find('#ability-name').val();
-			abilityValues['description'] = $(abilityParent).find('#ability-description').val();
-			abilityValues['tactic'] = $(abilityParent).find('#ability-tactic').val();
-			abilityValues['technique'] = technique;
-			abilityValues['platforms'] = getAllTests();
-			restRequest('POST', {"index": "am_ability_save", "data": abilityValues}, saveAbilityCallback);
-		}
-		else
-		{
-			alert('A duplicate OS & Executor combination was detected. Please correct the issue and try again.');
-		}
-}
-
-function saveAbilityCallback(data) {
-	$('p.process-status').html('<p>' + data + '</p><center><button id="reloadPage" class="atomic-button">Reload Page</button></center>');
-    $('#reloadPage').click(function() {
-		location.reload();
-	});
-}
-
-function getUUID() {
-	restRequest('POST', { "index": "am_get_uuid", "data": {}  }, getUUIDCallback);
-}
-
-function getUUIDCallback(data) {
-    let parent = $('#ability-profile');
-    $(parent).find('#ability-id').val(data);
-}
-
-function getMITRETactics() {
-	restRequest('POST', { "index": "am_get_tactics", "data": {} }, getMITRETacticsCallback);
-}
-
-function getMITRETacticsCallback(data) {
-	$('#mitre-tactic-data pre').text(JSON.stringify(data));
-}
-
-function getMITRETechniques(tactic) {
-	restRequest('POST', { "index": "am_get_techniques", "data": tactic }, getMITRETechniquesCallback);
-}
-
-function getMITRETechniquesCallback(data) {
-	$('#mitre-technique-data pre').text(JSON.stringify(data));
-}
-
 function addEmptyTest() {
 	curTest = {};
 	curParser = {};
@@ -352,56 +310,135 @@ function addEmptyTest() {
 	addTest(testCount, curTest);
 }
 
-function createNewAbility() {
-	clearAbility();
-	getUUID();
-	$('table.ability-tests-table tbody tr:last').after('<tr />').attr('class', 'test-platform-heading').append($('<td />').attr('class', 'test-platform-title').append($('<H2 />').text('Platforms:'))).append('<td />').attr('class', 'test-platform-title');
-	$('table.ability-tests-table tbody tr.test-platform-title td:last').append($('<span />', { 'onclick': 'addEmptyTest();' }).html('+')).attr('align', 'right');
-};
+// Validators
 
-function saveVariables() {
-        let ability_id = $('#ability-profile').find('#ability-id').val();
+function checkDupTestCombo(){ 
+	let testCount = $('[class^=test-heading-]').length;
 
-        let variables = [];
+	let testCombos = {};
 
-        $('#variable-table').find('tr.variable').each(function a() {
-                variables.push({ 'id': $(this).find('td.name p').data('id'), 'ability_id': ability_id, 'var_name': $(this).find('td.name p').text(), 'value': btoa($(this).find('td.value input').val()) });
-        });
-        restRequest('POST', {"index": "ac_variables_save", "data": variables}, saveVariablesCallback);
+	for (i = 0; i < testCount; i++)
+	{
+		curTest = {};
+		curTest[$('td.test-platform-value-'+i+' select option:selected').text()] = $('td.test-executor-value-'+i+' select option:selected').text();
+
+		for (let [key, value] of Object.entries(testCombos))
+		{
+			curTestEntry = Object.entries(curTest)[0];
+			if ((key == curTestEntry[0]) && (value == curTestEntry[1]))
+			{
+				$('p.process-status').append('<p>Two tests contain an identical platform and executor pairing. Only one test per pairing of platform and executor is permitted. Please correct the issue and try again.</p>');
+				return false;
+			}
+		}
+		Object.assign(testCombos, curTest);
+	}
+	return true;
 }
 
-function saveVariablesCallback(data) {
-        $('p.process-status').html('<p>' + data + '</p><center><button id="reloadPage" class="atomic-button">Reload Page</button></center>');
-    $('#reloadPage').click(function() {
-        location.reload();
-    });
+function checkTestsValid(){
+	let errorCount = 0;
+	let testCount = $('[class^=test-heading-]').length;
+	if (testCount == 0)
+	{
+		$('p.process-status').append('<p>No tests were found. You must add at least one test to save the ability.</p>');
+		errorCount++;
+	}
+	for (i = 0; i < testCount; i++)
+	{
+		// Validate that a platform is selected
+		if (typeof $('td.test-platform-value-'+i+' option:selected').val() == 'undefined')
+		{
+			$('p.process-status').append('<p>Test '+i+'\'s platform selection is blank. Please correct the issue and try again.</p>');
+			errorCount++;
+		}
+
+		// Validate that an executor is selected
+		if (typeof $('td.test-executor-value-'+i+' option:selected').val() == 'undefined')
+		{
+			$('p.process-status').append('<p>Test '+i+'\'s executor selection is blank. Please correct the issue and try again.</p>');
+			errorCount++;
+		}
+
+		// Validate that the command exists and is not blank.
+		if ($('td.test-command-value-'+i+' textarea').val() == '')
+		{
+			$('p.process-status').append('<p>Test '+i+'\'s command is blank. Please correct the issue and try again.</p>');
+			errorCount++;
+		}
+		// Validate that parser
+		if (typeof $('td.test-parser-name-value-'+i+' option:selected').val() !== 'undefined')
+		{
+			if (($('td.test-parser-property-value-'+i+' input').val() == '') || ($('td.test-parser-script-value-'+i+' input').val() == ''))
+			{
+				$('p.process-status').append('<p>Test '+i+'\'s parser settings appear to be blank or invalid. Please correct the issue and try again.</p>');
+				errorCount++;
+			}
+		}
+		else
+		{
+			
+			if (($('td.test-parser-property-value-'+i+' input').val() != '') || ($('td.test-parser-script-value-'+i+' input').val() != ''))
+			{
+				$('p.process-status').append('<p>Test '+i+'\'s parser settings appear to be blank or invalid. Please correct the issue and try again.</p>');
+				errorCount++;
+			}
+		}
+	}
+	if (errorCount > 0)
+	{
+		return false;
+	}
+	else
+	{
+		return true;
+	}
 }
 
-function buildRequirements(encodedTest){
-    let matchedRequirements = atob(encodedTest).match(/#{([^}]+)}/g);
-    if(matchedRequirements) {
-        matchedRequirements = matchedRequirements.filter(function(e) { return e !== '#{server}' });
-        matchedRequirements = matchedRequirements.filter(function(e) { return e !== '#{group}' });
-        matchedRequirements = matchedRequirements.filter(function(e) { return e !== '#{files}' });
-        matchedRequirements = [...new Set(matchedRequirements)];
-        return matchedRequirements.map(function(val){
-           return val.replace(/[#{}]/g, "");
-        });
-    }
-    return [];
-}
-
-function exportAllToStockpile() {
-        $('p.process-status').html('<p>Exporting all Abilities to Stockpile. Please wait.</p>');
-        restRequest('POST', { "index": "ac_export_all", "data": "" }, exportStockpileCallback);
-}
-
-function exportOneToStockpile(){
-        $('p.process-status').html('<p>Exporting Ability to Stockpile. Please wait.</p>');
-        let ability_id = $('#ability-profile').find('#ability-id').val();
-        restRequest('POST', { "index": "ac_export_one", "ability_id": ability_id }, exportStockpileCallback);
-}
-
-function exportStockpileCallback(data) {
-        $('p.process-status').html('<p>' + data + '</p>');
+function checkBasicAbility(){
+	let errorCount = 0;
+	// Check the Ability ID, should never fail.
+	if ($('#ability-id').text() == '')
+	{
+		$('p.process-status').append('<p>The ability ID appears to be blank or invalid. Please correct the issue and try again.</p>');
+		errorCount++;
+	}
+	// Check the Tactic
+	if (($('#ability-tactic option:selected').text() == '') || ($('#ability-tactic option:selected').val() == ''))
+	{
+		$('p.process-status').append('<p>The ability tactic appears to be blank or invalid. Please correct the issue and try again.</p>');
+		errorCount++;
+	}
+	// Check the Technique
+	if ((typeof $('#ability-technique option:selected').val() == 'undefined') || ($('#ability-technique option:selected').val() == ''))
+	{
+		$('p.process-status').append('<p>The ability technique appears to be blank or invalid. Please correct the issue and try again.</p>');
+		errorCount++;
+	}
+	// Check the Technique
+	if ((typeof $('#ability-technique option:selected').val() == 'undefined') || ($('#ability-technique option:selected').val() == ''))
+	{
+		$('p.process-status').append('<p>The ability technique appears to be blank or invalid. Please correct the issue and try again.</p>');
+		errorCount++;
+	}
+	// Check the Name
+	if ($('#ability-name').val() == '')
+	{
+		$('p.process-status').append('<p>The ability name appears to be blank or invalid. Please correct the issue and try again.</p>');
+		errorCount++;
+	}
+	// Check the description
+	if ($('#ability-description').val() == '')
+	{
+		$('p.process-status').append('<p>The ability description appears to be blank or invalid. Please correct the issue and try again.</p>');
+		errorCount++;
+	}
+	if (errorCount > 0)
+	{
+		return false;
+	}
+	else
+	{
+		return true;
+	}
 }

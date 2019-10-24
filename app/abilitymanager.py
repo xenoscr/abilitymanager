@@ -63,12 +63,13 @@ class abilitymanager:
 				tactics[matrix[i]['name']].append(self.fs.query([Filter('id', '=', tactic_id)])[0])    
 		
 		for tactic in tactics['Enterprise ATT&CK']:
-			tacticList.append(tactic['name'].replace(' ', '-').lower())
+			tacticList.append(tactic['name'])
 
 		return tacticList
 
 	async def getMITRETechniques(self, data):
-		tactic = data['data']
+		self.log.debug('Getting techniques for: {}'.format(data))
+		tactic = data['data'].replace(' ', '-').lower()
 		techniques = []
 		filter = [
 			Filter('type', '=', 'attack-pattern'),
@@ -86,6 +87,21 @@ class abilitymanager:
 			techniques.append({ 'tactic': tactic, 'name': entry['name'], 'id': entry['external_references'][0]['external_id'] })
 
 		return techniques
+	
+	async def getATTACK(self):
+		attackList = []
+		tactics = await self.getMITRETactics()
+
+		try:
+			for tactic in tactics:
+				for technique in await self.getMITRETechniques({ 'data': tactic }):
+					attackList.append(technique)
+
+			return attackList
+		except Exception as e:
+			self.log.debug('Failed to parse tactics')
+			self.log.error(e)
+			return []
 
 	async def explode_stockpile(self):
 		self.log.debug('Starting stockpile ability explosion')
@@ -239,14 +255,18 @@ class abilitymanager:
 	@template('abilitymanager.html')
 	async def landing(self, request):
 		try:
+			fullTactics = []
+			attackLit = []
 			await self.auth_svc.check_permissions(request)
 			abilities = await self.explode_stockpile()
 			tactics = set([a['tactic'].lower() for a in abilities])
+			fullTactics = await self.getMITRETactics()
+			attackList = await self.getATTACK()
 			self.log.debug('Landing call completed.')
 		except Exception as e:
-			self.log.debug('Fialed to land.')
+			self.log.debug('Failed to land.')
 			self.log.error(e)
-		return { 'abilities': json.dumps(abilities), 'tactics': tactics }
+		return { 'abilities': json.dumps(abilities), 'tactics': tactics, 'fulltactics': json.dumps(fullTactics), 'techniques': json.dumps(attackList) }
 
 	async def rest_api(self, request):
 		self.log.debug('Starting Rest call.')
@@ -263,7 +283,8 @@ class abilitymanager:
 				am_ability_save=lambda d: self.save_ability(data=d),
 				am_get_uuid=lambda d: self.get_uuid(data=d),
 				am_get_tactics=lambda d: self.getMITRETactics(),
-				am_get_techniques=lambda d: self.getMITRETechniques(data=d)
+				am_get_techniques=lambda d: self.getMITRETechniques(data=d),
+				am_get_attack=lambda d: self.getATTACK()
 			),
 			DELETE=dict(
 			)
