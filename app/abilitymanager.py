@@ -217,10 +217,11 @@ class abilitymanager:
 			self.log.error(e)
 			return 'Failed to parse ability data.'
 
-		#payloadPath = os.path.join(os.path.dirname(os.path.realpath(__file__)), '../../stockpile/data/payloads/')
-		#abilityPath = os.path.join(os.path.dirname(os.path.realpath(__file__)), '../../stockpile//data/abilities/')
-		payloadPath = '/tmp/'
-		abilityPath = '/tmp/'
+		payloadPath = os.path.join(os.path.dirname(os.path.realpath(__file__)), '../../stockpile/data/payloads/')
+		abilityPath = os.path.join(os.path.dirname(os.path.realpath(__file__)), '../../stockpile//data/abilities/')
+		# You can change the output path for testing or to seperate your changes if you like.
+		#payloadPath = '/tmp/'
+		#abilityPath = '/tmp/'
 
 		# Check and create payloads folder if it does not exist
 		try:
@@ -246,7 +247,7 @@ class abilitymanager:
 		except Exception as e:
 			self.log.error(e)
 
-		return 'Ta-Da?'
+		return 'Test saved successfully. Click the reload button to reload the list of available abilities.'
 
 	@template('abilitymanager.html')
 	async def landing(self, request):
