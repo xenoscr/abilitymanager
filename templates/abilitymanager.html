@@ -24,16 +24,16 @@
                         <center>
                                 <div id="build-workflow-toolbar" class="row-toolbar subnav">
                                         <div class="row-toolbar-section" id="section-0">
-                                                <button id="Refresh Abilities" type="button" class="row-toolbar-button" onclick="refreshAbilities()">
-                                                        <span class="icon"><img src=""/></span>
+                                                <button id="Refresh Abilities" type="button" class="row-toolbar-button" onclick="location.reload();">
+                                                        <span class="icon"><img src="/abilitymanager/img/load.png"/></span>
                                                         <span class="caption">Refresh Abilities</span>
                                                 </button>
                                                 <button id="New Ability" type="button" class="row-toolbar-button" onclick="createNewAbility();updateButtonState('#saveAbility','valid');">
-                                                        <span class="icon"><img src=""/></span>
+                                                        <span class="icon"><img src="/abilitymanager/img/new.png"/></span>
                                                         <span class="caption">New Ability</span>
                                                 </button>
                                                 <button id="Copy Ability" type="button" class="row-toolbar-button" onclick="getUUID();updateButtonState('#saveAbility','valid');">
-                                                        <span class="icon"><img src=""/></span>
+                                                        <span class="icon"><img src="/abilitymanager/img/copy.png"/></span>
                                                         <span class="caption">Copy Ability</span>
                                                 </button>
                                         </div>
@@ -65,7 +65,7 @@
                                                                 </table>
                                                         </div>
                                                         <div class="column section-border" style="flex:25%;">
-                                                                <img src="/atomiccaldera/img/atomics.png"/>
+                                                                <img src="/abilitymanager/img/atomics.png"/>
                                                                 <h4>Manage abilities</h4>
                                                                 <p>View available techniques</p>
                                                                 <center>

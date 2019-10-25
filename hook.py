@@ -1,7 +1,7 @@
 from plugins.abilitymanager.app.abilitymanager import abilitymanager
 from app.database.core_dao import CoreDao
 
-name = 'abilitymanager'
+name = 'AbilityManager'
 description = 'A plugin for MITRE\'s Caldera tool to aid in the creation and management of existing abilities.'
 address = 'plugin/abilitymanager/gui'
 
