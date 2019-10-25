@@ -68,7 +68,6 @@ class abilitymanager:
 		return tacticList
 
 	async def getMITRETechniques(self, data):
-		self.log.debug('Getting techniques for: {}'.format(data))
 		tactic = data['data'].replace(' ', '-').lower()
 		techniques = []
 		filter = [
@@ -157,7 +156,6 @@ class abilitymanager:
 	
 	async def save_ability(self, data):
 		abilityData = data.pop('data')
-		self.log.debug(abilityData)
 		newYaml = []
 		newYamlEntry = {}
 		newPlatforms = {}
@@ -214,9 +212,7 @@ class abilitymanager:
 			newYamlEntry['tactic'] = abilityData['tactic']
 			newYamlEntry['technique'] = abilityData['technique']
 			newYamlEntry['platforms'] = newPlatforms
-			self.log.debug(newYamlEntry)
 			newYaml.append(newYamlEntry)
-			self.log.debug(newYaml)
 		except Exception as e:
 			self.log.error(e)
 			return 'Failed to parse ability data.'

@@ -1,5 +1,3 @@
-// Portions of this code were borrowed from MITRE's Caldera chain plugin. All credits to them for anything I have reused.
-
 $(document).ready(function () {
     $("#ability-property-filter option").val(function(idx, val) {
         $(this).siblings('[value="'+ val +'"]').remove();
@@ -18,6 +16,7 @@ $(document).ready(function () {
     });
 });
 
+// Load the ability when selected from the drop-down menu
 async function loadAbility() {
     let parent = $('#ability-profile');
 	let testCounter = 0;
@@ -32,8 +31,18 @@ async function loadAbility() {
     $(parent).find('#ability-technique').val($(chosen).data('attack_id') + ' | ' + $(chosen).data('attack_name')).change();
     $(parent).find('#ability-description').val($(chosen).data('description'));
 
-	$('table.ability-tests-table tbody tr:last').after('<tr />').attr('class', 'test-platform-heading').append($('<td />').attr('class', 'test-platform-title').append($('<H2 />').text('Platforms:'))).append('<td />').attr('class', 'test-platform-title');
-	$('table.ability-tests-table tbody tr.test-platform-title td:last').append($('<span />', { 'onclick': 'addEmptyTest();' }).html('+')).attr('align', 'right');
+	$('table.ability-tests-table tbody tr:last')
+		.after('<tr />')
+		.attr('class', 'test-platform-heading')
+		.append($('<td />')
+			.attr('class', 'test-platform-title')
+			.append($('<H2 />').text('Platforms:')))
+		.append('<td />')
+		.attr('class', 'test-platform-title');
+	$('table.ability-tests-table tbody tr.test-platform-title td:last')
+		.append($('<span />', { 'onclick': 'addEmptyTest();' })
+			.html('+'))
+		.attr('align', 'right');
 	$(chosen).data('tests').forEach(function(test) {
 		addTest(testCounter, test);	
 		testCounter++;
@@ -45,8 +54,19 @@ function createNewAbility() {
 	clearAbility();
 	getUUID();
 	populateAbilityTacticOptions();
-	$('table.ability-tests-table tbody tr:last').after('<tr />').attr('class', 'test-platform-heading').append($('<td />').attr('class', 'test-platform-title').append($('<H2 />').text('Platforms:'))).append('<td />').attr('class', 'test-platform-title');
-	$('table.ability-tests-table tbody tr.test-platform-title td:last').append($('<span />', { 'onclick': 'addEmptyTest();' }).html('+')).attr('align', 'right');
+	$('table.ability-tests-table tbody tr:last')
+		.after('<tr />')
+		.attr('class', 'test-platform-heading')
+		.append($('<td />')
+			.attr('class', 'test-platform-title')
+			.append($('<H2 />')
+				.text('Platforms:')))
+		.append('<td />')
+		.attr('class', 'test-platform-title');
+	$('table.ability-tests-table tbody tr.test-platform-title td:last')
+		.append($('<span />', { 'onclick': 'addEmptyTest();' })
+			.html('+'))
+		.attr('align', 'right');
 };
 
 // API Handlers
@@ -69,7 +89,7 @@ function saveAbility() {
 	let abilityValues = {};
 	let technique = {};
 
-	if (checkDupTestCombo() && checkTestsValid() && checkBasicAbility()){
+	if (checkTestsValid() && checkDupTestCombo() && checkBasicAbility()){
 		technique['attack_id'] = $(abilityParent).find('#ability-technique option:selected').data('attack_id');
 		technique['name'] = $(abilityParent).find('#ability-technique option:selected').data('attack_name');
 
@@ -122,7 +142,7 @@ function getMITRETechniquesCallback(data) {
 // Populators
 
 function populateTacticAbilities(){
-        let exploits = JSON.parse($('#ability-data pre').text());
+	let exploits = JSON.parse($('#ability-data pre').text());
 
     let parent = $('#ability-profile');
     clearAbilityDossier();
@@ -141,7 +161,7 @@ function populateAbilityTacticOptions() {
 	let tactics = JSON.parse($('#mitre-tactic-data pre').text());
 	clearAbilityTacticOptions();
 	$('#ability-tactic').append($('<option />', { 'value': '', 'disabled': 'true', 'selected': 'true' }).text('N/A'));
-	tactics.forEach(function(tactic) {
+	tactics.sort().forEach(function(tactic) {
 		$('#ability-tactic').append($('<option />', { 'value': tactic.replace(' ', '-').toLowerCase() }).text(tactic.replace(' ', '-').toLowerCase()));
 	});
 }
@@ -231,25 +251,185 @@ function addTest(testNum, test){
 			parserProperty = '';
 			parserScript = '';
 		}
-		$('table.ability-tests-table tbody tr:last').after('<tr />').attr('class', 'test-heading-' + testNum).append($('<td />').attr('class', 'test-title-' + testNum).append($('<H3 />').text('Test ' + testNum + ':'))).append($('<td />').attr('class', 'test-delete-' + testNum).attr('align', 'right').append($('<span />', {id: 'delete-test-span', class: 'ability-delete-span', onclick: 'deleteTest('+ testNum + ');'}).html('-')));
-		$('table.ability-tests-table tbody tr:last').after('<tr />').attr('class', 'test-sub-header-row').append($('<td />').attr('class', 'test-sub-header')).append($('<td />').attr('style', 'text-align:left').attr('class', 'test-sub-header').append($('<h4>').text('Command Details:')));
-		$('table.ability-tests-table tbody tr:last').after('<tr />').attr('class', 'test-row1-' + testNum).append($('<td />').attr('class', 'test-platform-name-' + testNum).append($('<p />').text('Platform:'))).append($('<td />').attr('class', 'test-platform-value-' + testNum).append($('<select />').append($('<option />', {value: 'windows', text: 'windows'})).append($('<option />', {value: 'linux', text: 'linux'})).append($('<option />', {value: 'darwin', text: 'darwin'})).val(test.platform).change()));
-		$('table.ability-tests-table tbody tr:last').after('<tr />').attr('class', 'test-row2-' + testNum).append($('<td />').attr('class', 'test-executor-name-' + testNum).append($('<p />').text('Executor:'))).append($('<td />').attr('class', 'test-executor-value-' + testNum).append($('<select />').append($('<option />', {value: 'cmd', text: 'cmd'})).append($('<option />', {value: 'psh', text: 'psh'})).append($('<option />', {value: 'pwsh', text: 'pwsh'})).append($('<option />', {value: 'sh', text: 'sh'})).val(test.executor).change()));
-		$('table.ability-tests-table tbody tr:last').after('<tr />').attr('class', 'test-row3-' + testNum).append($('<td />').attr('class', 'test-command-name-' + testNum).append($('<p />').text('Command:'))).append($('<td />').attr('class', 'test-command-value-' + testNum).append($('<textarea></textarea>').text(atob(test.command))));
-		$('table.ability-tests-table tbody tr:last').after('<tr />').attr('class', 'test-sub-header-row').append($('<td />').attr('class', 'test-sub-header')).append($('<td />').attr('style', 'text-align:left').attr('class', 'test-sub-header').append($('<h4>').text('Test Clean-Up:')));
+		$('table.ability-tests-table tbody tr:last')
+			.after('<tr />')
+			.attr('class', 'test-heading-' + testNum)
+			.append($('<td />')
+				.attr('class', 'test-title-' + testNum)
+				.append($('<H3 />').text('Test ' + testNum + ':')))
+			.append($('<td />')
+				.attr('class', 'test-delete-' + testNum)
+				.attr('align', 'right')
+				.append($('<span />', {id: 'delete-test-span', class: 'ability-delete-span', onclick: 'deleteTest('+ testNum + ');'})
+					.html('-')));
+		$('table.ability-tests-table tbody tr:last')
+			.after('<tr />')
+			.attr('class', 'test-sub-header-row')
+			.append($('<td />')
+				.attr('class', 'test-sub-header'))
+			.append($('<td />')
+				.attr('style', 'text-align:left')
+				.attr('class', 'test-sub-header')
+				.append($('<h4>')
+					.text('Command Details:')));
+		$('table.ability-tests-table tbody tr:last')
+			.after('<tr />')
+			.attr('class', 'test-row1-' + testNum)
+			.append($('<td />')
+				.attr('class', 'test-platform-name-' + testNum)
+				.append($('<p />')
+					.text('Platform:')))
+			.append($('<td />')
+				.attr('class', 'test-platform-value-' + testNum)
+				.append($('<select />')
+					.append($('<option />', {value: 'windows', text: 'windows'}))
+				.append($('<option />', {value: 'linux', text: 'linux'}))
+				.append($('<option />', {value: 'darwin', text: 'darwin'}))
+				.val(test.platform).change()));
+		$('table.ability-tests-table tbody tr:last')
+			.after('<tr />')
+			.attr('class', 'test-row2-' + testNum)
+			.append($('<td />')
+				.attr('class', 'test-executor-name-' + testNum)
+				.append($('<p />').text('Executor:')))
+			.append($('<td />')
+				.attr('class', 'test-executor-value-' + testNum)
+				.append($('<select />')
+					.append($('<option />', {value: 'cmd', text: 'cmd'}))
+					.append($('<option />', {value: 'psh', text: 'psh'}))
+					.append($('<option />', {value: 'pwsh', text: 'pwsh'}))
+					.append($('<option />', {value: 'sh', text: 'sh'}))
+					.val(test.executor).change()));
+		$('table.ability-tests-table tbody tr:last')
+			.after('<tr />')
+			.attr('class', 'test-row3-' + testNum)
+			.append($('<td />')
+				.attr('class', 'test-command-name-' + testNum)
+				.append($('<p />')
+					.text('Command:')))
+			.append($('<td />')
+				.attr('class', 'test-command-value-' + testNum)
+				.append($('<textarea></textarea>')
+					.text(atob(test.command))));
+		$('table.ability-tests-table tbody tr:last')
+			.after('<tr />')
+			.attr('class', 'test-sub-header-row')
+			.append($('<td />')
+				.attr('class', 'test-sub-header'))
+			.append($('<td />')
+				.attr('style', 'text-align:left')
+				.attr('class', 'test-sub-header')
+				.append($('<h4>')
+					.text('Test Clean-Up:')));
 		if (test.cleanup)
-			$('table.ability-tests-table tbody tr:last').after('<tr />').attr('class', 'test-row4-' + testNum).append($('<td />').attr('class', 'test-cleanup-name-' + testNum).append($('<p />').text('Clean-Up:'))).append($('<td />').attr('class', 'test-cleanup-value-' + testNum).append($('<textarea></textarea>').text(atob(test.cleanup))));
+			$('table.ability-tests-table tbody tr:last')
+				.after('<tr />')
+				.attr('class', 'test-row4-' + testNum)
+				.append($('<td />')
+					.attr('class', 'test-cleanup-name-' + testNum)
+					.append($('<p />')
+						.text('Clean-Up:')))
+				.append($('<td />')
+					.attr('class', 'test-cleanup-value-' + testNum)
+					.append($('<textarea></textarea>')
+						.text(atob(test.cleanup))));
 		else
-			$('table.ability-tests-table tbody tr:last').after('<tr />').attr('class', 'test-row4-' + testNum).append($('<td />').attr('class', 'test-cleanup-name-' + testNum).append($('<p />').text('Clean-Up:'))).append($('<td />').attr('class', 'test-cleanup-value-' + testNum).append($('<textarea></textarea>').text('')));
-		$('table.ability-tests-table tbody tr:last').after('<tr />').attr('class', 'test-sub-header-row').append($('<td />').attr('class', 'test-sub-header')).append($('<td />').attr('style', 'text-align:left').attr('class', 'test-sub-header').append($('<h4>').text('Payload:')));
+			$('table.ability-tests-table tbody tr:last')
+				.after('<tr />')
+				.attr('class', 'test-row3-' + testNum)
+				.append($('<td />')
+					.attr('class', 'test-cleanup-name-' + testNum)
+					.append($('<p />')
+						.text('Clean-Up:')))
+				.append($('<td />')
+					.attr('class', 'test-cleanup-value-' + testNum)
+					.append($('<textarea></textarea>')
+						.text('')));
+		$('table.ability-tests-table tbody tr:last')
+			.after('<tr />')
+			.attr('class', 'test-sub-header-row')
+			.append($('<td />')
+				.attr('class', 'test-sub-header'))
+			.append($('<td />')
+				.attr('style', 'text-align:left')
+				.attr('class', 'test-sub-header')
+				.append($('<h4>')
+					.text('Payload:')));
 		if (test.payload)
-			$('table.ability-tests-table tbody tr:last').after('<tr />').attr('class', 'test-row5-' + testNum).append($('<td />').attr('class', 'test-payload-name-' + testNum).append($('<p />').text('Payload:'))).append($('<td />').attr('class', 'test-payload-value-' + testNum).append($('<input />').val(test.payload)));
+			$('table.ability-tests-table tbody tr:last')
+				.after('<tr />')
+				.attr('class', 'test-row5-' + testNum)
+				.append($('<td />')
+					.attr('class', 'test-payload-name-' + testNum)
+					.append($('<p />')
+						.text('Payload:')))
+				.append($('<td />')
+					.attr('class', 'test-payload-value-' + testNum)
+					.append($('<input />')
+						.val(test.payload)));
 		else
-			$('table.ability-tests-table tbody tr:last').after('<tr />').attr('class', 'test-row5-' + testNum).append($('<td />').attr('class', 'test-payload-name-' + testNum).append($('<p />').text('Payload:'))).append($('<td />').attr('class', 'test-payload-value-' + testNum).append($('<input />').val('')));
-		$('table.ability-tests-table tbody tr:last').after('<tr />').attr('class', 'test-sub-header-row').append($('<td />').attr('class', 'test-sub-header')).append($('<td />').attr('style', 'text-align:left').attr('class', 'test-sub-header').append($('<h4>').text('Parser:')).append($('<button />').attr('type', 'button').attr('class', 'test-parser-delete-button-'+ testNum).attr('onclick', 'clearParser('+ testNum +');').html('Clear Parser')));
-		$('table.ability-tests-table tbody tr:last').after('<tr />').attr('class', 'test-row6-' + testNum).append($('<td />').attr('class', 'test-parser-name-name-' + testNum).append($('<p />').text('Parser Name:'))).append($('<td />').attr('class', 'test-parser-name-value-' + testNum).append($('<select />').append($('<option />', {value: 'line', text: 'line'})).append($('<option />', {value: 'host', text: 'host'})).append($('<option />', {value: 'json', text: 'json'})).append($('<option />', {value: 'regex', text: 'regex'})).val(parserName).change()));
-		$('table.ability-tests-table tbody tr:last').after('<tr />').attr('class', 'test-row7-' + testNum).append($('<td />').attr('class', 'test-parser-property-name-' + testNum).append($('<p />').text('Parser Property:'))).append($('<td />').attr('class', 'test-parser-property-value-' + testNum).append($('<input>').val(parserProperty)));
-		$('table.ability-tests-table tbody tr:last').after('<tr />').attr('class', 'test-row8-' + testNum).append($('<td />').attr('class', 'test-parser-script-name-' + testNum).append($('<p />').text('Parser script:'))).append($('<td />').attr('class', 'test-parser-script-value-' + testNum).append($('<input>').val(parserScript)));
+			$('table.ability-tests-table tbody tr:last')
+				.after('<tr />')
+				.attr('class', 'test-row5-' + testNum)
+				.append($('<td />')
+					.attr('class', 'test-payload-name-' + testNum)
+					.append($('<p />').text('Payload:')))
+				.append($('<td />')
+					.attr('class', 'test-payload-value-' + testNum)
+					.append($('<input />')
+						.val('')));
+		$('table.ability-tests-table tbody tr:last')
+			.after('<tr />')
+			.attr('class', 'test-sub-header-row')
+			.append($('<td />')
+				.attr('class', 'test-sub-header'))
+			.append($('<td />')
+				.attr('style', 'text-align:left')
+				.attr('class', 'test-sub-header')
+				.append($('<h4>')
+					.text('Parser:'))
+				.append($('<button />')
+					.attr('type', 'button')
+					.attr('class', 'test-parser-delete-button-'+ testNum)
+					.attr('onclick', 'clearParser('+ testNum +');')
+					.html('Clear Parser')));
+		$('table.ability-tests-table tbody tr:last')
+			.after('<tr />')
+			.attr('class', 'test-row6-' + testNum)
+			.append($('<td />')
+				.attr('class', 'test-parser-name-name-' + testNum)
+				.append($('<p />')
+					.text('Parser Name:')))
+			.append($('<td />')
+				.attr('class', 'test-parser-name-value-' + testNum)
+				.append($('<select />')
+					.append($('<option />', {value: 'line', text: 'line'}))
+					.append($('<option />', {value: 'host', text: 'host'}))
+					.append($('<option />', {value: 'json', text: 'json'}))
+					.append($('<option />', {value: 'regex', text: 'regex'}))
+				.val(parserName).change()));
+		$('table.ability-tests-table tbody tr:last')
+			.after('<tr />')
+			.attr('class', 'test-row7-' + testNum)
+			.append($('<td />')
+				.attr('class', 'test-parser-property-name-' + testNum)
+				.append($('<p />')
+					.text('Parser Property:')))
+			.append($('<td />')
+				.attr('class', 'test-parser-property-value-' + testNum)
+				.append($('<input>')
+					.val(parserProperty)));
+		$('table.ability-tests-table tbody tr:last')
+			.after('<tr />')
+			.attr('class', 'test-row8-' + testNum)
+			.append($('<td />')
+				.attr('class', 'test-parser-script-name-' + testNum)
+				.append($('<p />')
+					.text('Parser script:')))
+			.append($('<td />')
+				.attr('class', 'test-parser-script-value-' + testNum)
+				.append($('<input>')
+					.val(parserScript)));
 	
 }
 
@@ -287,8 +467,19 @@ function deleteTest(testNum){
 	clearTests();
 	testCounter = 0;
 	
-	$('table.ability-tests-table tbody tr:last').after('<tr />').attr('class', 'test-platform-heading').append($('<td />').attr('class', 'test-platform-title').append($('<H2 />').text('Platforms:'))).append('<td />').attr('class', 'test-platform-title');
-	$('table.ability-tests-table tbody tr.test-platform-title td:last').append($('<span />', { 'onclick': 'addEmptyTest();' }).html('+')).attr('align', 'right');
+	$('table.ability-tests-table tbody tr:last')
+		.after('<tr />')
+		.attr('class', 'test-platform-heading')
+		.append($('<td />')
+			.attr('class', 'test-platform-title')
+			.append($('<H2 />')
+				.text('Platforms:')))
+		.append('<td />')
+		.attr('class', 'test-platform-title');
+	$('table.ability-tests-table tbody tr.test-platform-title td:last')
+		.append($('<span />', { 'onclick': 'addEmptyTest();' })
+			.html('+'))
+		.attr('align', 'right');
 	for (i = 0; i < allTests.length; i++){
 		if (i != testNum)
 		{
