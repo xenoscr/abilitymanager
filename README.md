@@ -73,7 +73,7 @@ This is still a work in progress. If you have improvements or ways to make this 
 Initial version.
 
 ## License
-Se the [LICENSE](https://github.com/xenoscr/abilitymanager/blob/master/LICENSE)
+See the [LICENSE](https://github.com/xenoscr/abilitymanager/blob/master/LICENSE)
 
 ## Credits
 * CTI and Caldera are maintained by MITRE: @mitre - https://github.com/mitre
