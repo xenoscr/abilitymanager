@@ -36,6 +36,10 @@
                                                         <span class="icon"><img src="/abilitymanager/img/copy.png"/></span>
                                                         <span class="caption">Copy Ability</span>
                                                 </button>
+                                                <button id="Delete Ability" type="button" class="row-toolbar-button" onclick="deleteAbilityCheck();">
+                                                        <span class="icon"><img src="/abilitymanager/img/delete.png"/></span>
+                                                        <span class="caption">Delete Ability</span>
+                                                </button>
                                         </div>
                                 </div>
                         </center>
@@ -83,6 +87,10 @@
                                                         </div>
                                                         <div class="column" style="flex:75%;text-align:left;">
                                                                 <table style="width:100%;border-spacing:20px;border-collapse:collapse;" class="ability-table">
+                                                                        <tr>
+                                                                                <td><p>Ability Path:</p></td>
+                                                                                <td><p id="ability-path"/></td>
+                                                                        </tr>
                                                                         <tr>
                                                                                 <td><p>Ability ID:</p></td>
                                                                                 <td><p id="ability-id"/></td>

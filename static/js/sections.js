@@ -23,6 +23,7 @@ async function loadAbility() {
     clearAbilityDossier();
 
     let chosen = $('#ability-test option:selected');
+	$(parent).find('#ability-path').text($(chosen).data('path'));
     $(parent).find('#ability-id').text($(chosen).attr('ability_id'));
     $(parent).find('#ability-name').val($(chosen).attr('name'));
 	populateAbilityTacticOptions();
@@ -77,8 +78,28 @@ function refreshAbilities() {
 }
 
 function refreshAbilitiesCallback(data) {
-        alert(data);
-        $('p.process-status').html(data);
+	alert(data);
+	$('p.process-status').html(data);
+}
+
+function deleteAbilityCheck() {
+	$('p.process-status').html('<p>Clicking "YES" will delete the ability. <b>WARNING: The deletion cannot be undone!</b> Are you sure?</p><center><button id="yoloDelete" class="atomic-button" style="background-color:darkred;">YES</button><button id="safeNo" class="atomic-button" style="background-color:green;">NO</button></center>');
+	$('#yoloDelete').click(function() {
+		$('p.process-status').html('<p>Deleting ability, please wait...</p><p>This should be quick, please be patient.</p>')
+		deleteAbility();
+	});
+	$('#safeNo').click(function() {
+		$('p.process-status').html('Reload process cancled.');
+	});
+}
+
+function deleteAbility() {
+	restRequest('POST', {"index": "am_ability_delete", "data": $('#ability-path').text() }, deleteAbilityCallback);
+}
+
+function deleteAbilityCallback(data) {
+	$('p.process-status').html(data);
+	location.reload();
 }
 
 function saveAbility() {
@@ -93,6 +114,7 @@ function saveAbility() {
 		technique['attack_id'] = $(abilityParent).find('#ability-technique option:selected').data('attack_id');
 		technique['name'] = $(abilityParent).find('#ability-technique option:selected').data('attack_name');
 
+		abilityValues['path'] = $(abilityParent).find('#ability-path').text();
 		abilityValues['id'] = $(abilityParent).find('#ability-id').text();
 		abilityValues['name'] = $(abilityParent).find('#ability-name').val();
 		abilityValues['description'] = $(abilityParent).find('#ability-description').val();
@@ -162,7 +184,7 @@ function populateAbilityTacticOptions() {
 	clearAbilityTacticOptions();
 	$('#ability-tactic').append($('<option />', { 'value': '', 'disabled': 'true', 'selected': 'true' }).text('N/A'));
 	tactics.sort().forEach(function(tactic) {
-		$('#ability-tactic').append($('<option />', { 'value': tactic.replace(' ', '-').toLowerCase() }).text(tactic.replace(' ', '-').toLowerCase()));
+		$('#ability-tactic').append($('<option />', { 'value': tactic.split(' ').join('-').toLowerCase() }).text(tactic.split(' ').join('-').toLowerCase()));
 	});
 }
 
@@ -171,7 +193,7 @@ function populateAbilityTechniqueOptions() {
 	clearAbilityTechniqueOptions();
 	$('#ability-technique').append($('<option />', { 'value': '', 'disabled': 'true', 'selected': 'true' }).text('N/A'));
 	techniques.sort((a, b) => (a.id > b.id) ? 1 : -1).forEach(function(technique) {
-		if (technique.tactic == $('#ability-tactic option:selected').text().replace(' ', '-').toLowerCase()) {
+		if (technique.tactic == $('#ability-tactic option:selected').text().split(' ').join('-').toLowerCase()) {
 			textVal = technique.id + ' | ' + technique.name;
 			$('#ability-technique').append($('<option />', { 'value': textVal }).text(textVal).data('attack_id', technique.id).data('attack_name', technique.name));
 		}
@@ -189,6 +211,8 @@ function clearAbilityDossier(){
 		$(this).val('');
         $(this).html('');
     });
+	$('#ability-path p').text('');
+	$('#ability-id p').text('');
 	clearAbilityTacticOptions();
 	clearTests();
 }
@@ -216,6 +240,7 @@ function clearAbility() {
     let parent = $('#ability-profile');
     clearAbilityDossier();
 
+	$(parent).find('#ability-path').text('');
     $(parent).find('#ability-id').text('');
     $(parent).find('#ability-name').val('');
     $(parent).find('#ability-tactic').val('');
@@ -233,6 +258,7 @@ function appendAbilityToList(tactic, value) {
         .data("attack_name", value['technique']['name'])
         .data("description", value['description'])
 		.data("tests", value['platforms'])
+		.data("path", value['path'])
         .text(value['name']));
 }
 

@@ -36,6 +36,14 @@ class abilitymanager:
 			with open(confPath, 'r') as c:
 				conf = yaml.load(c, Loader=yaml.Loader)
 			self.ctipath = os.path.expanduser(os.path.join(conf['ctipath'], 'enterprise-attack/'))
+			if 'payloadPath' in conf.keys():
+				self.payloadPath = os.path.expander(conf['payloadPath'])
+			else:
+				self.payloadPath = os.path.join(os.path.dirname(os.path.realpath(__file__)), '../../stockpile/data/payloads/')
+			if 'abilityPath' in conf.keys():
+				self.abilityPath = os.path.expander(conf['abilityPath'])
+			else:
+				self.abilityPath = os.path.join(os.path.dirname(os.path.realpath(__file__)), '../../stockpile//data/abilities/')
 		except Exception as e:
 			self.log.debug('Stopped at api call.')
 			self.log.error(e)
@@ -149,10 +157,19 @@ class abilitymanager:
 									platformData.append(newTest)
 						newAbility = { 'id': rawAbility['id'], 'name': rawAbility['name'],
 							'description': rawAbility['description'], 'tactic': rawAbility['tactic'],
-							'technique': rawAbility['technique'], 'platforms': platformData }
+							'technique': rawAbility['technique'], 'platforms': platformData, 'path': fullFile }
 
 						stockAbilities.append(newAbility)
 		return stockAbilities
+
+	async def delete_ability(self, data):
+		pathData = data['data']
+		try:
+			os.remove(pathData)
+			return 'File deleted.'
+		except Exception as e:
+			self.log.error(e)
+			return 'File deletion failed.'
 	
 	async def save_ability(self, data):
 		abilityData = data.pop('data')
@@ -217,33 +234,40 @@ class abilitymanager:
 			self.log.error(e)
 			return 'Failed to parse ability data.'
 
-		payloadPath = os.path.join(os.path.dirname(os.path.realpath(__file__)), '../../stockpile/data/payloads/')
-		abilityPath = os.path.join(os.path.dirname(os.path.realpath(__file__)), '../../stockpile//data/abilities/')
+		#payloadPath = os.path.join(os.path.dirname(os.path.realpath(__file__)), '../../stockpile/data/payloads/')
+		#abilityPath = os.path.join(os.path.dirname(os.path.realpath(__file__)), '../../stockpile//data/abilities/')
 		# You can change the output path for testing or to seperate your changes if you like.
 		#payloadPath = '/tmp/'
 		#abilityPath = '/tmp/'
 
 		# Check and create payloads folder if it does not exist
 		try:
-			if not os.path.exists(payloadPath):
-				os.makedirs(payloadPath)
+			if not os.path.exists(self.payloadPath):
+				os.makedirs(self.payloadPath)
 		except Exception as e:
 			self.log.error(e)
 			return False
 
 		# Check and create ability folder if it does not exist
 		try:
-			if not os.path.exists(os.path.join(abilityPath, abilityData['tactic'])):
-				os.makedirs(os.path.join(abilityPath, abilityData['tactic']))
+			if not os.path.exists(os.path.join(self.abilityPath, abilityData['tactic'])):
+				os.makedirs(os.path.join(self.abilityPath, abilityData['tactic']))
 		except Exception as e:
 			self.log.error(e)
 			return False
 
 		# Write the YAML file to the correct directory
 		try:
-			with open(os.path.join(abilityPath, abilityData['tactic'], '{}.yml'.format(abilityData['id'])), 'w') as newYAMLFile:
+			with open(os.path.join(self.abilityPath, abilityData['tactic'], '{}.yml'.format(abilityData['id'])), 'w') as newYAMLFile:
 				dump = yaml.dump(newYaml, default_style = None, default_flow_style = False, allow_unicode = True, encoding = None, sort_keys = False)
 				newYAMLFile.write(dump)
+		except Exception as e:
+			self.log.error(e)
+
+		# Delete the original file if necessary
+		try:
+			if (os.path.dirname(abilityData['path']) != os.path.join(self.abilityPath, abilityData['tactic'])) and (os.path.basename(abilityData['path']) == '{}.yml'.format(abilityData['id'])):
+				os.remove(abilityData['path'])
 		except Exception as e:
 			self.log.error(e)
 
@@ -278,6 +302,7 @@ class abilitymanager:
 			POST=dict(
 				am_ability=lambda d: self.explode_stockpile(**d),
 				am_ability_save=lambda d: self.save_ability(data=d),
+				am_ability_delete=lambda d: self.delete_ability(data=d),
 				am_get_uuid=lambda d: self.get_uuid(data=d),
 				am_get_tactics=lambda d: self.getMITRETactics(),
 				am_get_techniques=lambda d: self.getMITRETechniques(data=d),
